@@ -31,7 +31,7 @@ const NavBar = () => {
 
         <div className='flex items-center gap-8'> 
             <SearchIcon className='max-md:hidden w-6 h-6 cursor-pointer' />
-            <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Login</button>
+            <button className='bg-red-700 hover:bg-red-900 text-white font-bold py-2 px-10 rounded'>Login</button>
         </div>
 
         {isOpen ? (
