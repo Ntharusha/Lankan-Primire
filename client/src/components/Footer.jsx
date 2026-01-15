@@ -2,10 +2,10 @@ import React from 'react'
 
 const Footer = () => {
   return (
-    <div>
-        <h1></h1>
-    </div>
+    <footer className="bg-black py-8 text-center text-gray-400">
+      <p>&copy; 2025 Lankan Premiere. All rights reserved.</p>
+    </footer>
   )
 }
 
-export default Footer 
+export default Footer
