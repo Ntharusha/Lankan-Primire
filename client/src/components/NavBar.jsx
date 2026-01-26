@@ -26,7 +26,7 @@ const NavBar = () => {
         
         <div className='max-w-[1440px] mx-auto flex items-center justify-between'>
             
-            {/* Logo Section - Size Increased Slightly */}
+            {/* Logo Section */}
             <Link to='/' className='relative z-[110] shrink-0'>
                 <img 
                     src={assets.logo} 
@@ -58,7 +58,7 @@ const NavBar = () => {
                     <input 
                       type="text" 
                       placeholder="Search..." 
-                      className='bg-transparent border-none outline-none text-xs ml-2 w-20 lg:w-28 text-white' 
+                      className='bg-transparent border-none outline-none text-xs ml-2 w-20 lg:w-28 text-white placeholder-gray-400' 
                     />
                 </div>
                 
