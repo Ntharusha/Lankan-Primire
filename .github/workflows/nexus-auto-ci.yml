@@ -1,42 +1,33 @@
-name: Production CI
-
+name: Production Pipeline
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
-    branches: [main]
-
+    branches: ["main"]
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Security Audit
-        run: |
-          if [ -f package.json ]; then
-            npm audit --audit-level=high
-          fi
-
+        run: if [ -f package.json ]; then npm audit --audit-level=moderate; fi
   build:
     needs: security
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
+      - uses: actions/checkout@v4
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Install Dependencies
-        run: |
-          if [ -f package.json ]; then
-            npm ci
-          fi
+          node-version: 20
+          cache: "npm"
       - name: Build Application
         run: |
-          if [ -f package.json ]; then
-            npm run build --if-present
-          fi
-      - name: Build Docker Image
-        run: docker build -t express-ts-app:latest .
+          if [ -f package.json ]; then npm ci; fi
+          if [ -f tsconfig.json ]; then npm run build; fi
+      - name: Containerize
+        run: docker build . -t express-app:latest
