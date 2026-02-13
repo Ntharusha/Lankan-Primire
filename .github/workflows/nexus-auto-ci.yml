@@ -1,0 +1,42 @@
+name: Production CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Security Audit
+        run: |
+          if [ -f package.json ]; then
+            npm audit --audit-level=high
+          fi
+
+  build:
+    needs: security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          fi
+      - name: Build Application
+        run: |
+          if [ -f package.json ]; then
+            npm run build --if-present
+          fi
+      - name: Build Docker Image
+        run: docker build -t express-ts-app:latest .
