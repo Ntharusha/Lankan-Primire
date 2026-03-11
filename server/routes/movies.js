@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Movie = require('../models/Movie');
+const { auth, admin } = require('../middleware/auth');
 
 // Get all movies
 router.get('/', async (req, res) => {
   try {
-    const movies = await Movie.find({ isShowing: true }).sort({ createdAt: -1 });
+    // Return all movies; let clients filter by isShowing if needed
+    // This allows the admin panel to manage all movies
+    const movies = await Movie.find().sort({ createdAt: -1 });
     res.json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -26,7 +29,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create movie (admin)
-router.post('/', async (req, res) => {
+router.post('/', auth, admin, async (req, res) => {
   try {
     const movie = new Movie(req.body);
     const savedMovie = await movie.save();
@@ -37,7 +40,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update movie (admin)
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, admin, async (req, res) => {
   try {
     const movie = await Movie.findByIdAndUpdate(
       req.params.id,
@@ -54,7 +57,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete movie (admin)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, admin, async (req, res) => {
   try {
     const movie = await Movie.findByIdAndDelete(req.params.id);
     if (!movie) {

@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import apiClient from '../services/api'
+import toast from 'react-hot-toast'
+import { useAuth } from '../context/AuthContext'
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Eye,
   Film,
   Calendar,
   Clock,
   Star
 } from 'lucide-react'
+import { getPosterUrl, handleImageError } from '../utils/movieUtils'
 
 const AdminMovies = () => {
+  const { user } = useAuth()
+
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -28,79 +34,88 @@ const AdminMovies = () => {
     vote_average: '',
     isShowing: false
   })
+  const [editingMovie, setEditingMovie] = useState(null)
+
 
   useEffect(() => {
-    // Simulated data - replace with actual API call
-    setMovies([
-      {
-        _id: '1',
-        title: 'Moda Tharindu',
-        titleSinhala: 'මෝඩ තරිඳු',
-        overview: 'A compelling story directed by Thisara Imbulana',
-        poster_path: 'https://img.youtube.com/vi/kPummbLKlts/hqdefault.jpg',
-        release_date: '2025-08-22',
-        runtime: 125,
-        vote_average: 8.2,
-        isShowing: true
-      },
-      {
-        _id: '2',
-        title: 'Father',
-        titleSinhala: 'ෆාදර්',
-        overview: 'A gripping dramatic film',
-        poster_path: 'https://img.youtube.com/vi/wZq_svKB0KQ/hqdefault.jpg',
-        release_date: '2025-09-05',
-        runtime: 118,
-        vote_average: 7.5,
-        isShowing: true
-      },
-      {
-        _id: '3',
-        title: 'Neera',
-        titleSinhala: 'නීරා',
-        overview: 'A romantic tale',
-        poster_path: 'https://img.youtube.com/vi/ztTmdYoNsxA/hqdefault.jpg',
-        release_date: '2025-07-04',
-        runtime: 130,
-        vote_average: 7.9,
-        isShowing: false
-      },
-    ])
-    setLoading(false)
+    fetchMovies()
   }, [])
 
-  const filteredMovies = movies.filter(movie => 
-    movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    movie.titleSinhala.includes(searchTerm)
-  )
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this movie?')) {
-      setMovies(movies.filter(m => m._id !== id))
+  const fetchMovies = async () => {
+    try {
+      const data = await apiClient.get('/movies')
+      setMovies(data)
+    } catch (error) {
+      console.error('Failed to fetch movies', error)
+      toast.error('Failed to load movies')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleAddMovie = (e) => {
-    e.preventDefault()
-    const movie = {
-      ...newMovie,
-      _id: Date.now().toString(),
-      runtime: parseInt(newMovie.runtime),
-      vote_average: parseFloat(newMovie.vote_average)
+  const filteredMovies = movies.filter(movie =>
+    movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    movie.titleSinhala?.includes(searchTerm)
+  )
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this movie?')) {
+      try {
+        await apiClient.delete(`/movies/${id}`)
+        setMovies(movies.filter(m => m._id !== id))
+        toast.success('Movie deleted successfully')
+      } catch (error) {
+        console.error('Failed to delete movie', error)
+        toast.error('Failed to delete movie')
+      }
     }
-    setMovies([...movies, movie])
-    setShowModal(false)
-    setNewMovie({
-      title: '',
-      titleSinhala: '',
-      overview: '',
-      poster_path: '',
-      backdrop_path: '',
-      release_date: '',
-      runtime: '',
-      vote_average: '',
-      isShowing: false
-    })
+  }
+
+  const handleAddMovie = async (e) => {
+    e.preventDefault()
+    try {
+      const movieData = {
+        ...newMovie,
+        runtime: parseInt(newMovie.runtime),
+        vote_average: parseFloat(newMovie.vote_average)
+      }
+      const addedMovie = await apiClient.post('/movies', movieData)
+      setMovies([addedMovie, ...movies])
+      setShowModal(false)
+      setNewMovie({
+        title: '',
+        titleSinhala: '',
+        overview: '',
+        poster_path: '',
+        backdrop_path: '',
+        release_date: '',
+        runtime: '',
+        vote_average: '',
+        isShowing: false
+      })
+      toast.success('Movie added successfully')
+    } catch (error) {
+      console.error('Failed to add movie', error)
+      toast.error('Failed to add movie')
+    }
+  }
+
+  const handleEditMovie = async (e) => {
+    e.preventDefault()
+    try {
+      const movieData = {
+        ...editingMovie,
+        runtime: parseInt(editingMovie.runtime),
+        vote_average: parseFloat(editingMovie.vote_average)
+      }
+      const updatedMovie = await apiClient.put(`/movies/${editingMovie._id}`, movieData)
+      setMovies(movies.map(m => m._id === updatedMovie._id ? updatedMovie : m))
+      setEditingMovie(null)
+      toast.success('Movie updated successfully')
+    } catch (error) {
+      console.error('Failed to update movie', error)
+      toast.error('Failed to update movie')
+    }
   }
 
   if (loading) {
@@ -113,9 +128,18 @@ const AdminMovies = () => {
 
   return (
     <div className="space-y-6">
+      {/* User Info Debug */}
+      {user && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800">
+            <strong>Logged in as:</strong> {user.name} ({user.email}) | <strong>Role:</strong> <span className={user.role === 'admin' ? 'text-green-600 font-bold' : 'text-red-600'}>{user.role || 'user'}</span>
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Manage Movies</h1>
-        <button 
+        <button
           onClick={() => setShowModal(true)}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
@@ -141,9 +165,10 @@ const AdminMovies = () => {
         {filteredMovies.map((movie) => (
           <div key={movie._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
             <div className="relative">
-              <img 
-                src={movie.poster_path} 
+              <img
+                src={getPosterUrl(movie.poster_path)}
                 alt={movie.title}
+                onError={handleImageError}
                 className="w-full h-48 object-cover"
               />
               {movie.isShowing ? (
@@ -175,21 +200,21 @@ const AdminMovies = () => {
                 </span>
               </div>
               <div className="flex gap-2">
-                <Link 
+                <Link
                   to={`/admin/movies/${movie._id}`}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition-colors text-sm"
                 >
                   <Eye size={16} />
                   View
                 </Link>
-                <Link 
-                  to={`/admin/movies/edit/${movie._id}`}
+                <button
+                  onClick={() => setEditingMovie(movie)}
                   className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition-colors text-sm"
                 >
                   <Edit size={16} />
                   Edit
-                </Link>
-                <button 
+                </button>
+                <button
                   onClick={() => handleDelete(movie._id)}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg flex items-center justify-center gap-1 transition-colors text-sm"
                 >
@@ -208,22 +233,32 @@ const AdminMovies = () => {
         </div>
       )}
 
-      {/* Add Movie Modal */}
-      {showModal && (
+      {/* Modal - Unified for Add and Edit */}
+      {(showModal || editingMovie) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-800">Add New Movie</h2>
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {editingMovie ? 'Edit Movie' : 'Add New Movie'}
+              </h2>
+              <button
+                onClick={() => { setShowModal(false); setEditingMovie(null); }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
             </div>
-            <form onSubmit={handleAddMovie} className="p-6 space-y-4">
+            <form onSubmit={editingMovie ? handleEditMovie : handleAddMovie} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Movie Title (English)</label>
                   <input
                     type="text"
                     required
-                    value={newMovie.title}
-                    onChange={(e) => setNewMovie({...newMovie, title: e.target.value})}
+                    value={editingMovie ? editingMovie.title : newMovie.title}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, title: e.target.value })
+                      : setNewMovie({ ...newMovie, title: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -232,8 +267,10 @@ const AdminMovies = () => {
                   <input
                     type="text"
                     required
-                    value={newMovie.titleSinhala}
-                    onChange={(e) => setNewMovie({...newMovie, titleSinhala: e.target.value})}
+                    value={editingMovie ? editingMovie.titleSinhala : newMovie.titleSinhala}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, titleSinhala: e.target.value })
+                      : setNewMovie({ ...newMovie, titleSinhala: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -243,29 +280,35 @@ const AdminMovies = () => {
                 <textarea
                   required
                   rows="3"
-                  value={newMovie.overview}
-                  onChange={(e) => setNewMovie({...newMovie, overview: e.target.value})}
+                  value={editingMovie ? editingMovie.overview : newMovie.overview}
+                  onChange={(e) => editingMovie
+                    ? setEditingMovie({ ...editingMovie, overview: e.target.value })
+                    : setNewMovie({ ...newMovie, overview: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Poster URL</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Poster URL / Path</label>
                   <input
-                    type="url"
+                    type="text"
                     required
-                    value={newMovie.poster_path}
-                    onChange={(e) => setNewMovie({...newMovie, poster_path: e.target.value})}
+                    value={editingMovie ? editingMovie.poster_path : newMovie.poster_path}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, poster_path: e.target.value })
+                      : setNewMovie({ ...newMovie, poster_path: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Backdrop URL</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Backdrop URL / Path</label>
                   <input
-                    type="url"
+                    type="text"
                     required
-                    value={newMovie.backdrop_path}
-                    onChange={(e) => setNewMovie({...newMovie, backdrop_path: e.target.value})}
+                    value={editingMovie ? editingMovie.backdrop_path : newMovie.backdrop_path}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, backdrop_path: e.target.value })
+                      : setNewMovie({ ...newMovie, backdrop_path: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -276,8 +319,10 @@ const AdminMovies = () => {
                   <input
                     type="date"
                     required
-                    value={newMovie.release_date}
-                    onChange={(e) => setNewMovie({...newMovie, release_date: e.target.value})}
+                    value={editingMovie ? (editingMovie.release_date?.split('T')[0]) : newMovie.release_date}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, release_date: e.target.value })
+                      : setNewMovie({ ...newMovie, release_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -286,8 +331,10 @@ const AdminMovies = () => {
                   <input
                     type="number"
                     required
-                    value={newMovie.runtime}
-                    onChange={(e) => setNewMovie({...newMovie, runtime: e.target.value})}
+                    value={editingMovie ? editingMovie.runtime : newMovie.runtime}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, runtime: e.target.value })
+                      : setNewMovie({ ...newMovie, runtime: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -298,8 +345,10 @@ const AdminMovies = () => {
                     step="0.1"
                     min="0"
                     max="10"
-                    value={newMovie.vote_average}
-                    onChange={(e) => setNewMovie({...newMovie, vote_average: e.target.value})}
+                    value={editingMovie ? editingMovie.vote_average : newMovie.vote_average}
+                    onChange={(e) => editingMovie
+                      ? setEditingMovie({ ...editingMovie, vote_average: e.target.value })
+                      : setNewMovie({ ...newMovie, vote_average: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
@@ -308,8 +357,10 @@ const AdminMovies = () => {
                 <input
                   type="checkbox"
                   id="isShowing"
-                  checked={newMovie.isShowing}
-                  onChange={(e) => setNewMovie({...newMovie, isShowing: e.target.checked})}
+                  checked={editingMovie ? editingMovie.isShowing : newMovie.isShowing}
+                  onChange={(e) => editingMovie
+                    ? setEditingMovie({ ...editingMovie, isShowing: e.target.checked })
+                    : setNewMovie({ ...newMovie, isShowing: e.target.checked })}
                   className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
                 />
                 <label htmlFor="isShowing" className="text-sm text-gray-700">Currently Showing</label>
@@ -317,16 +368,16 @@ const AdminMovies = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => { setShowModal(false); setEditingMovie(null); }}
                   className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors font-bold"
                 >
-                  Add Movie
+                  {editingMovie ? 'Update Movie' : 'Add Movie'}
                 </button>
               </div>
             </form>

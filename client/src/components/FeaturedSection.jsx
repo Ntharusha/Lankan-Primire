@@ -1,70 +1,104 @@
-
 import React from 'react'
-import { dummyShowsData } from '../assets/assets'
 import { Link } from 'react-router-dom'
-import { Star, Clock, ChevronRight } from 'lucide-react'
+import { Star, Clock, ChevronRight, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { getPosterUrl, handleImageError } from '../utils/movieUtils'
 
-const FeaturedSection = () => {
+const FeaturedSection = ({ selectedMood, movies = [] }) => {
+  // Filter movies based on moodTags
+  const filteredMovies = selectedMood
+    ? movies.filter(movie => movie.moodTags?.includes(selectedMood))
+    : movies;
+
   return (
-    <div className="bg-[#050905] text-white py-16 px-4 md:px-8 lg:px-24">
-      <div className="flex items-center justify-between mb-8">
-        <div className="border-l-4 border-red-600 pl-4">
-          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wider">
-            Featured <span className="text-red-600">Movies</span>
-          </h2>
-        </div>
-        <Link to="/movies" className="flex items-center gap-1 text-gray-400 hover:text-red-600 transition-colors text-sm font-medium">
-          View All <ChevronRight className="w-4 h-4" />
-        </Link>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
-        {dummyShowsData.slice(0, 5).map((movie) => (
-          <div 
-            key={movie._id} 
-            className="bg-[#121418] rounded-xl overflow-hidden border border-white/5 hover:border-red-600/30 transition-all duration-500 group"
-          >
-            <div className="relative aspect-[2/3] overflow-hidden">
-              <img 
-                src={movie.poster_path} 
-                alt={movie.title} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-              
-              {/* Rating Badge */}
-              <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/10">
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                <span className="text-white text-[10px] font-bold">{movie.vote_average}</span>
-              </div>
-              
-              {/* Book Button */}
-              <div className="absolute bottom-3 left-0 right-0 px-3 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                <Link to={`/movies/${movie._id}`} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg w-full text-center block text-xs font-bold shadow-lg">
-                  BOOK NOW
-                </Link>
-              </div>
+    <div className="py-24 px-6 md:px-16 lg:px-24">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-xs font-black uppercase tracking-[0.3em] text-gray-500">Premium Curations</span>
             </div>
-            
-            <div className="p-3 bg-[#121418]">
-              <h3 className="text-sm font-bold text-white mb-1 truncate group-hover:text-red-600 transition-colors">
-                {movie.title}
-              </h3>
-              <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                <span className="flex items-center gap-0.5">
-                  <Clock className="w-2.5 h-2.5" />
-                  {movie.runtime}m
-                </span>
-                <span className="text-gray-700">|</span>
-                <span className="truncate">{movie.genres[0]?.name}</span>
-              </div>
-            </div>
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">
+              {selectedMood ? `${selectedMood} ` : 'Featured '}
+              <span className="text-gradient italic">Movies</span>
+            </h2>
           </div>
-        ))}
+          <Link to="/movies" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs font-black uppercase tracking-widest bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+            Explore All <ChevronRight className="w-4 h-4 text-primary" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          <AnimatePresence mode='popLayout'>
+            {filteredMovies.length > 0 ? (
+              filteredMovies.map((movie, index) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  key={movie._id}
+                  className="glass-card rounded-[2rem] overflow-hidden group hover:border-primary/30 transition-all duration-500"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <img
+                      src={getPosterUrl(movie.poster_path)}
+                      alt={movie.title}
+                      onError={handleImageError}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-nebula-deep via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
+
+                    {/* Rating Badge */}
+                    <div className="absolute top-4 right-4 glass-card px-3 py-1.5 rounded-xl flex items-center gap-2 border-none backdrop-blur-xl">
+                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                      <span className="text-white text-xs font-black">{movie.vote_average}</span>
+                    </div>
+
+                    {/* Quick Labels */}
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {movie.original_language === 'si' && (
+                        <div className="glass-card px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-primary border-primary/20 bg-primary/5">
+                          Sinhala
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Book Button */}
+                    <div className="absolute bottom-6 left-6 right-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                      <Link to={`/movies/${movie._id}`} className="btn-primary text-white py-4 rounded-2xl w-full text-center block text-xs font-black shadow-2xl tracking-widest uppercase">
+                        Secure Seats
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-lg font-black text-white mb-2 truncate group-hover:text-primary transition-colors uppercase tracking-tight">
+                      {movie.title}
+                    </h3>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 text-primary" />
+                        {movie.runtime}m
+                      </span>
+                      <span className="w-1 h-1 bg-gray-800 rounded-full"></span>
+                      <span className="truncate text-nebula-accent">{movie.genres[0]?.name}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center">
+                <p className="text-gray-500 font-bold uppercase tracking-widest">No movies found for this mood.</p>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>          
+    </div>
   )
 }
 
 export default FeaturedSection
-

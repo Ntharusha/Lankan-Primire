@@ -6,12 +6,12 @@ import screenImage from './screenImage.svg'
 import profile from './profile.png'
 
 export const assets = {
-  logo,
-  marvelLogo,
-  googlePlay,
-  appStore,
-  screenImage,
-  profile
+    logo,
+    marvelLogo,
+    googlePlay,
+    appStore,
+    screenImage,
+    profile
 }
 
 export const dummyTrailers = [
@@ -36,7 +36,7 @@ export const dummyTrailers = [
 const dummyCastsData = [
     { "name": "Ranjan Ramanayake", "profile_path": "https://image.tmdb.org/t/p/original/6Ksb8ANhhoWWGnlM6O1qrySd7e1.jpg" },
     { "name": "Uddika Premarathna", "profile_path": "https://image.tmdb.org/t/p/original/snk6JiXOOoRjPtHU5VMoy6qbd32.jpg" },
-    { "name": "Shanudrie Priyasad", "profile_path": "https://image.tmdb.org/t/p/original/usWnHCzbADijULREZYSJ0qfM00y.jpg" },
+    { "name": "Shanudrie Priyasad", "profile_path": "https://img.youtube.com/vi/usWnHCzbADijULREZYSJ0qfM00y.jpg" },
     { "name": "Dilhani Ekanayake", "profile_path": "https://image.tmdb.org/t/p/original/lJm89neuiVlYISEqNpGZA5kTAnP.jpg" },
     { "name": "Jagath Chamila", "profile_path": "https://image.tmdb.org/t/p/original/mGAPQG2OKTgdKFkp9YpvCSqcbgY.jpg" }
 ]
@@ -60,6 +60,7 @@ export const dummyShowsData = [
         "vote_average": 8.2,
         "vote_count": 1200,
         "runtime": 125,
+        "moodTags": ["Thrilled", "Action"]
     },
     {
         "_id": "s002",
@@ -78,6 +79,7 @@ export const dummyShowsData = [
         "vote_average": 7.5,
         "vote_count": 850,
         "runtime": 118,
+        "moodTags": ["Romantic", "Family-time"]
     },
     {
         "_id": "s003",
@@ -97,6 +99,7 @@ export const dummyShowsData = [
         "vote_average": 7.9,
         "vote_count": 940,
         "runtime": 130,
+        "moodTags": ["Romantic", "Comedy"]
     },
     {
         "_id": "s004",
@@ -116,6 +119,7 @@ export const dummyShowsData = [
         "vote_average": 8.5,
         "vote_count": 2100,
         "runtime": 140,
+        "moodTags": ["Family-time", "Romantic"]
     },
     {
         "_id": "s005",
@@ -135,6 +139,7 @@ export const dummyShowsData = [
         "vote_average": 7.8,
         "vote_count": 1500,
         "runtime": 135,
+        "moodTags": ["Thrilled", "Horror"]
     },
     {
         "_id": "s006",
@@ -234,3 +239,4 @@ export const dummyBookingData = [
         "isPaid": true,
     }
 ]
+

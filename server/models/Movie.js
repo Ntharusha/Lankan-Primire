@@ -1,11 +1,19 @@
 const mongoose = require('mongoose');
 
 const movieSchema = new mongoose.Schema({
+  externalId: {
+    type: String,
+    index: true,
+  },
   title: {
     type: String,
     required: true,
   },
   titleSinhala: {
+    type: String,
+    required: true,
+  },
+  titleTamil: {
     type: String,
     required: true,
   },
@@ -56,6 +64,10 @@ const movieSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  moodTags: [{
+    type: String,
+    enum: ['Thrilled', 'Romantic', 'Family-time', 'Horror', 'Action', 'Comedy'],
+  }],
 }, {
   timestamps: true,
 });

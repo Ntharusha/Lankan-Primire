@@ -1,14 +1,44 @@
-
-import React from 'react'
-import { dummyShowsData } from '../assets/assets'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { getAllMovies } from '../services/movieService'
 import { Calendar, Clock, Star, Play, ChevronRight } from 'lucide-react'
+import { getPosterUrl, handleImageError } from '../utils/movieUtils'
 
 const Movies = () => {
+  const [movies, setMovies] = useState([])
+  const [loading, setLoading] = useState(true)
+  const location = useLocation()
+  
+  const searchParams = new URLSearchParams(location.search)
+  const searchQuery = searchParams.get('search') || ''
+
+  useEffect(() => {
+    // ... (trimmed for brevity, will use full content in actual call)
+    const fetchMovies = async () => {
+      try {
+        const data = await getAllMovies()
+        setMovies(data.filter(m => m.isShowing))
+      } catch (error) {
+        console.error("Failed to fetch movies:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMovies()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050905] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-[#050905] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-16">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="border-l-4 border-red-600 pl-4">
@@ -16,17 +46,22 @@ const Movies = () => {
               All <span className="text-red-600">Movies</span>
             </h2>
           </div>
-          
+
           <div className="hidden md:flex items-center gap-2 text-gray-400">
-            <span className="text-sm">{dummyShowsData.length} movies available</span>
+            <span className="text-sm">{movies.length} movies available</span>
           </div>
         </div>
 
         {/* Movie Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {dummyShowsData.map((movie, index) => (
-            <div 
-              key={movie._id} 
+          {movies
+            .filter(m => !searchQuery || 
+               m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               m.overview?.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((movie, index) => (
+            <div
+              key={movie._id}
               className="bg-[#121418] rounded-xl overflow-hidden border border-white/5 hover:border-red-600/30 transition-all duration-500 group relative"
             >
               {/* Number Badge */}
@@ -36,19 +71,22 @@ const Movies = () => {
 
               {/* Poster Image */}
               <div className="relative aspect-[2/3] overflow-hidden">
-                <img 
-                  src={movie.poster_path} 
-                  alt={movie.title} 
+                <img
+                  src={getPosterUrl(movie.poster_path)}
+                  alt={movie.title}
+                  onError={handleImageError}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                
+
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                
+
                 {/* Play Button */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-50 group-hover:scale-100">
                   <div className="bg-red-600 rounded-full p-3 cursor-pointer hover:bg-red-700 transition-colors">
-                    <Play className="w-6 h-6 text-white fill-current" />
+                    <Link to={`/movies/${movie._id}`}>
+                      <Play className="w-6 h-6 text-white fill-current" />
+                    </Link>
                   </div>
                 </div>
 
@@ -71,21 +109,21 @@ const Movies = () => {
                 <h3 className="text-sm font-bold text-white mb-1 truncate group-hover:text-red-600 transition-colors">
                   {movie.title}
                 </h3>
-                
+
                 <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
                   <span className="flex items-center gap-0.5">
                     <Clock className="w-2.5 h-2.5" />
                     {movie.runtime}m
                   </span>
                   <span className="text-gray-700">|</span>
-                  <span className="truncate">{movie.genres[0]?.name}</span>
+                  <span className="truncate">{movie.genres && movie.genres[0]?.name}</span>
                 </div>
 
                 {/* Genres */}
                 <div className="flex flex-wrap gap-1 mb-2">
-                  {movie.genres.slice(0, 2).map((genre) => (
-                    <span 
-                      key={genre.id} 
+                  {movie.genres && movie.genres.slice(0, 2).map((genre) => (
+                    <span
+                      key={genre.id || genre._id}
                       className="bg-red-600/20 text-red-400 text-[9px] px-1.5 py-0.5 rounded-full"
                     >
                       {genre.name}
@@ -95,11 +133,11 @@ const Movies = () => {
 
                 {/* Tagline */}
                 <p className="text-gray-600 text-[9px] italic truncate mb-2">
-                  "{movie.tagline}"
+                  "{movie.tagline || 'Experience the magic'}"
                 </p>
 
                 {/* Mobile Book Button */}
-                <Link 
+                <Link
                   to={`/movies/${movie._id}`}
                   className="md:hidden w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 rounded-lg text-xs font-medium transition-colors"
                 >
@@ -117,10 +155,10 @@ const Movies = () => {
               Coming <span className="text-yellow-500">Soon</span>
             </h3>
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div 
+              <div
                 key={item}
                 className="bg-[#121418] rounded-xl p-3 hover:bg-[#1a1d24] transition-colors cursor-pointer text-center group border border-white/5 hover:border-yellow-500/30"
               >
@@ -130,9 +168,9 @@ const Movies = () => {
                   </div>
                 </div>
                 <h4 className="text-white font-semibold text-xs mb-1 group-hover:text-yellow-500 transition-colors truncate">
-                  Movie {item}
+                  Coming Soon {item}
                 </h4>
-                <p className="text-gray-500 text-[10px]">2025</p>
+                <p className="text-gray-500 text-[10px]">2026</p>
                 <span className="inline-block mt-2 bg-yellow-500/20 text-yellow-500 text-[9px] px-2 py-1 rounded-full">
                   Coming Soon
                 </span>
@@ -150,8 +188,8 @@ const Movies = () => {
             <p className="text-gray-400 text-sm">
               Visit our platform to get the latest movie updates
             </p>
-            <Link 
-              to="/movies" 
+            <Link
+              to="/movies"
               className="inline-flex items-center mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
             >
               Explore Movies

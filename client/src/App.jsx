@@ -10,40 +10,71 @@ import MyBookings from './pages/MyBookings'
 import Favourite from './pages/Favourite'
 import { Toaster } from 'react-hot-toast'
 import Footer from './components/Footer'
+import { AuthProvider } from './context/AuthContext'
 import { BookingProvider } from './context/BookingContext'
 import AdminLayout from './components/AdminLayout'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminMovies from './pages/AdminMovies'
 import AdminBookings from './pages/AdminBookings'
+import AdminUsers from './pages/AdminUsers'
+import AdminSettings from './pages/AdminSettings'
+import AdminShows from './pages/AdminShows'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import ProtectedRoute from './components/ProtectedRoute'
+import Theaters from './pages/Theaters'
+import { FavouriteProvider } from './context/FavouriteContext'
 
 const App = () => {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
 
   return (
-    <BookingProvider>
-      <Toaster />
-      {!isAdminRoute && <NavBar />}
-      <Routes>
-        {/* Public Routes */}
-        <Route path='/' element={<Home />} />
-        <Route path='/movies' element={<Movies />} />
-        <Route path='/movies/:id' element={<MovieDetails />} />
-        <Route path='/movies/:id/:date' element={<SeatLayout />} />
-        <Route path='/my-bookings' element={<MyBookings />} />
-        <Route path='/fav' element={<Favourite />} />
+    <AuthProvider>
+      <BookingProvider>
+        <FavouriteProvider>
+          <Toaster />
+          {!isAdminRoute && <NavBar />}
+        <Routes>
+          {/* Public Routes */}
+          <Route path='/' element={<Home />} />
+          <Route path='/movies' element={<Movies />} />
+          <Route path='/movies/:id' element={<MovieDetails />} />
+          <Route path='/theaters' element={<Theaters />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
+          <Route path='/fav' element={<Favourite />} />
 
-        {/* Admin Routes */}
-        <Route path='/admin' element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path='movies' element={<AdminMovies />} />
-          <Route path='bookings' element={<AdminBookings />} />
-          <Route path='users' element={<div className="p-8 text-center text-gray-500">Users Management - Coming Soon</div>} />
-          <Route path='settings' element={<div className="p-8 text-center text-gray-500">Settings - Coming Soon</div>} />
-        </Route>
-      </Routes>
-      {!isAdminRoute && <Footer />}
-    </BookingProvider>
+          {/* User Protected Routes */}
+          <Route path='/seat-layout/:id' element={
+            <ProtectedRoute>
+              <SeatLayout />
+            </ProtectedRoute>
+          } />
+          <Route path='/my-bookings' element={
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          } />
+
+          {/* Admin Protected Routes */}
+          <Route path='/admin' element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path='movies' element={<AdminMovies />} />
+            <Route path='shows' element={<AdminShows />} />
+            <Route path='bookings' element={<AdminBookings />} />
+            <Route path='users' element={<AdminUsers />} />
+            <Route path='settings' element={<AdminSettings />} />
+          </Route>
+        </Routes>
+        {!isAdminRoute && <Footer />}
+        </FavouriteProvider>
+      </BookingProvider>
+    </AuthProvider>
   )
 }
 
