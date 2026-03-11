@@ -1,139 +1,116 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { dummyShowsData } from '../assets/assets'
-import { Heart, Star, Clock, Trash2 } from 'lucide-react'
+import { Heart, Star, Clock, Trash2, ChevronRight, Sparkles } from 'lucide-react'
+import { getPosterUrl, handleImageError } from '../utils/movieUtils'
+import { useFavourites } from '../context/FavouriteContext'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const Favourite = () => {
-  // In a real app, this would come from a global state or API
-  const [favourites, setFavourites] = useState(
-    dummyShowsData.slice(0, 3).map(movie => movie._id)
-  )
+  const { favourites, removeFavourite } = useFavourites()
 
-  const favouriteMovies = dummyShowsData.filter(movie => 
-    favourites.includes(movie._id)
-  )
-
-  const removeFromFavourites = (movieId) => {
-    setFavourites(prev => prev.filter(id => id !== movieId))
-  }
-
-  if (favouriteMovies.length === 0) {
+  if (favourites.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white pt-24 pb-16 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Heart className="w-8 h-8 text-red-600 fill-red-600" />
-            <h1 className="text-4xl font-bold">My Favourites</h1>
+      <div className="min-h-screen pt-40 pb-16 px-8">
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-center text-center">
+          <div className="w-32 h-32 bg-white/5 rounded-[3rem] flex items-center justify-center mb-8 border border-white/5">
+            <Heart className="w-16 h-16 text-gray-700" />
           </div>
-          
-          <div className="flex flex-col items-center justify-center py-20">
-            <Heart className="w-24 h-24 text-gray-700 mb-6" />
-            <h2 className="text-2xl font-bold mb-2 text-gray-400">No Favourites Yet</h2>
-            <p className="text-gray-500 mb-8">Start adding movies to your favourites!</p>
-            <Link 
-              to="/movies"
-              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold transition-all"
-            >
-              Browse Movies
-            </Link>
-          </div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter mb-4">No Favourites Yet</h1>
+          <p className="text-gray-500 max-w-sm font-medium mb-12 leading-relaxed">
+            Discover Sinhala cinema and heart the movies you love to revisit later.
+          </p>
+          <Link to="/movies" className="btn-primary text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-sm">
+            Discover Movies
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white pt-24 pb-16 px-8 md:px-16 lg:px-24">
+    <div className="min-h-screen pt-32 pb-16 px-6 md:px-16 lg:px-24">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Heart className="w-8 h-8 text-red-600 fill-red-600" />
-            <h1 className="text-4xl font-bold">My Favourites</h1>
-          </div>
-          <p className="text-gray-400">{favouriteMovies.length} movie{favouriteMovies.length !== 1 ? 's' : ''}</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {favouriteMovies.map((movie) => (
-            <div 
-              key={movie._id} 
-              className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-red-600/50 transition-all duration-300 group"
-            >
-              <div className="relative aspect-[2/3] overflow-hidden">
-                <img 
-                  src={movie.poster_path} 
-                  alt={movie.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                
-                {/* Remove Button */}
-                <button
-                  onClick={() => removeFromFavourites(movie._id)}
-                  className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-red-600 rounded-full transition-all group/btn"
-                  title="Remove from favourites"
-                >
-                  <Trash2 className="w-5 h-5 text-white" />
-                </button>
-
-                {/* Rating Badge */}
-                <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded flex items-center gap-1 border border-white/10">
-                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                  <span className="text-white text-xs font-bold">{movie.vote_average}</span>
-                </div>
-
-                {/* Book Button on Hover */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <Link 
-                    to={`/movies/${movie._id}`}
-                    className="bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg w-full text-center block font-bold transition-colors"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <h3 className="text-xl font-bold mb-2 group-hover:text-red-600 transition-colors">
-                  {movie.title}
-                </h3>
-                
-                <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {movie.runtime}m
-                  </span>
-                  <span>•</span>
-                  <span>{movie.release_date}</span>
-                </div>
-
-                <p className="text-gray-400 text-sm line-clamp-2 mb-3">
-                  {movie.overview}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-                  {movie.genres.slice(0, 3).map((genre) => (
-                    <span 
-                      key={genre.id}
-                      className="bg-white/10 text-xs px-2 py-1 rounded-full text-gray-300"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-xs font-black uppercase tracking-[0.3em] text-gray-500">Your Watchlist</span>
             </div>
-          ))}
+            <h1 className="text-5xl font-black uppercase tracking-tighter italic">My <span className="text-gradient">Favourites</span></h1>
+          </div>
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+            {favourites.length} movie{favourites.length !== 1 ? 's' : ''} saved
+          </p>
         </div>
 
-        {/* Browse More */}
-        <div className="text-center mt-12">
-          <Link 
-            to="/movies"
-            className="inline-flex items-center bg-white/5 border border-white/10 hover:bg-red-600 hover:border-red-600 text-white px-8 py-3 rounded-full font-bold transition-all"
-          >
-            Add More Favourites
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <AnimatePresence>
+            {favourites.map((movie, index) => (
+              <motion.div
+                key={movie._id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: index * 0.05 }}
+                className="glass-card rounded-[2rem] overflow-hidden group relative"
+              >
+                {/* Poster */}
+                <div className="relative aspect-[2/3] overflow-hidden">
+                  <img
+                    src={getPosterUrl(movie.poster_path)}
+                    alt={movie.title}
+                    onError={handleImageError}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
+
+                  {/* Rating */}
+                  <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 border border-white/10">
+                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    <span className="text-white text-[10px] font-black">{movie.vote_average?.toFixed(1)}</span>
+                  </div>
+
+                  {/* Remove */}
+                  <button
+                    onClick={() => removeFavourite(movie._id)}
+                    className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-red-600 rounded-xl transition-all border border-white/10 hover:border-red-500"
+                    title="Remove from favourites"
+                  >
+                    <Trash2 className="w-4 h-4 text-white" />
+                  </button>
+
+                  {/* Hover CTA */}
+                  <div className="absolute bottom-3 left-3 right-3 transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    <Link
+                      to={`/movies/${movie._id}`}
+                      className="btn-primary text-white text-center py-2.5 rounded-xl text-xs font-black uppercase tracking-widest block"
+                    >
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4">
+                  <h3 className="text-sm font-black text-white uppercase tracking-tight truncate group-hover:text-primary transition-colors mb-1">
+                    {movie.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                    <Clock className="w-3 h-3" />
+                    <span>{movie.runtime}m</span>
+                    <span className="text-gray-700">|</span>
+                    <span className="truncate">{movie.genres?.[0]?.name}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-20 flex justify-center">
+          <Link to="/movies" className="glass-card px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-4 hover:border-primary/30 transition-all group">
+            Discover More <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

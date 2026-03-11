@@ -20,6 +20,9 @@ const bookingSchema = new mongoose.Schema({
       ref: 'Movie',
       required: true,
     },
+    showId: {
+      type: String, // Store show._id as string reference
+    },
     showDateTime: {
       type: Date,
       required: true,
@@ -37,6 +40,12 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true,
   }],
+  canteenOrder: [{
+    id: String,
+    name: String,
+    price: Number,
+    quantity: Number,
+  }],
   amount: {
     type: Number,
     required: true,
@@ -45,6 +54,14 @@ const bookingSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  paymentIntentId: {
+    type: String,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed'],
+    default: 'pending',
+  },
   paymentMethod: {
     type: String,
     enum: ['card', 'cash', 'online'],
@@ -52,9 +69,30 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'cancelled'],
+    enum: ['pending', 'confirmed', 'cancelled', 'expired'],
     default: 'confirmed',
   },
+  splitPayment: {
+    isSplit: { type: Boolean, default: false },
+    primaryUser: {
+      name: String,
+      email: String,
+      amount: Number,
+      isPaid: { type: Boolean, default: false }
+    },
+    friends: [{
+      name: String,
+      email: String,
+      amount: Number,
+      isPaid: { type: Boolean, default: false },
+      paidAt: Date
+    }],
+    expiresAt: Date // 15-minute window for all to pay
+  },
+  bookingTimer: {
+    type: Date, // For the 10-minute hold
+    default: () => new Date(+new Date() + 10 * 60 * 1000)
+  }
 }, {
   timestamps: true,
 });

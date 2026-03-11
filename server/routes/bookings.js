@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose')
 const Booking = require('../models/Booking');
 const Movie = require('../models/Movie');
+const Show = require('../models/Show');
+const { sendBookingConfirmation, sendSplitInvite } = require('../services/notificationService');
+const { auth, admin } = require('../middleware/auth');
 
-// Get all bookings
-router.get('/', async (req, res) => {
+// No fallback storage - system should be DB-driven for consistency
+
+// Get all bookings (admin only)
+router.get('/', auth, admin, async (req, res) => {
   try {
     const bookings = await Booking.find()
       .populate('show.movie')
@@ -15,8 +21,22 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get bookings by date
-router.get('/date/:date', async (req, res) => {
+// Get current user's bookings
+router.get('/my', auth, async (req, res) => {
+  try {
+    const userEmail = req.user?.email;
+    if (!userEmail) return res.status(401).json({ message: 'Unauthorized' });
+    const bookings = await Booking.find({ 'user.email': userEmail })
+      .populate('show.movie')
+      .sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get bookings by date (authenticated)
+router.get('/date/:date', auth, async (req, res) => {
   try {
     const startDate = new Date(req.params.date);
     const endDate = new Date(req.params.date);
@@ -34,19 +54,83 @@ router.get('/date/:date', async (req, res) => {
   }
 });
 
-// Create booking
-router.post('/', async (req, res) => {
+// Create booking (authenticated)
+router.post('/', auth, async (req, res) => {
   try {
+    // Ensure show.movie is an ObjectId referencing Movie.
+    if (req.body?.show?.movie) {
+      const moviePayload = req.body.show.movie
+      // If moviePayload is an object with title or externalId, try to find or create
+      if (typeof moviePayload === 'object') {
+        let movieDoc = null
+        if (moviePayload.externalId) {
+          movieDoc = await Movie.findOne({ externalId: String(moviePayload.externalId) })
+        }
+        if (!movieDoc && moviePayload.title) {
+          movieDoc = await Movie.findOne({ title: moviePayload.title })
+        }
+        if (!movieDoc) {
+          movieDoc = new Movie({
+            externalId: moviePayload.externalId ? String(moviePayload.externalId) : undefined,
+            title: moviePayload.title || 'Untitled',
+            poster_path: moviePayload.poster_path || '',
+            backdrop_path: moviePayload.backdrop_path || '',
+            release_date: moviePayload.release_date || '1970-01-01',
+            overview: moviePayload.overview || moviePayload.title || 'No overview provided',
+            titleSinhala: moviePayload.titleSinhala || moviePayload.title || 'N/A'
+          })
+          await movieDoc.save()
+        }
+        req.body.show.movie = movieDoc._id
+      }
+    }
+
     const booking = new Booking(req.body);
     const savedBooking = await booking.save();
-    res.status(201).json(savedBooking);
+    const populated = await savedBooking.populate('show.movie')
+    console.log('Booking saved to DB', populated._id)
+
+    // Update Show seats to unavailable
+    const showId = req.body.show?.showId;
+    if (showId) {
+      const showDoc = await Show.findById(showId);
+      if (showDoc) {
+        const bookedSeats = req.body.bookedSeats || [];
+        let changed = false;
+        showDoc.seatGrid.forEach(row => {
+          row.forEach(seat => {
+            if (bookedSeats.includes(seat.seatNumber)) {
+              seat.isAvailable = false;
+              seat.isLocked = false;
+              seat.lockedBy = null;
+              changed = true;
+            }
+          });
+        });
+        if (changed) {
+          await showDoc.save();
+          console.log(`Updated Show ${showId} seats: ${bookedSeats.join(', ')}`);
+        }
+      }
+    }
+
+    // Send confirmation email
+    sendBookingConfirmation(populated);
+
+    // Emit real-time update for admin dashboard
+    if (req.io) {
+      req.io.emit('booking_completed', populated);
+    }
+
+    res.status(201).json(populated);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Update booking status
-router.patch('/:id', async (req, res) => {
+
+// Update booking status (authenticated)
+router.patch('/:id', auth, async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
@@ -62,8 +146,8 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// Cancel booking
-router.delete('/:id', async (req, res) => {
+// Cancel booking (authenticated)
+router.delete('/:id', auth, async (req, res) => {
   try {
     const booking = await Booking.findByIdAndDelete(req.params.id);
     if (!booking) {
@@ -75,29 +159,133 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Get dashboard stats
-router.get('/stats/dashboard', async (req, res) => {
+// Get dashboard stats (admin)
+router.get('/stats/dashboard', auth, async (req, res) => {
   try {
     const totalBookings = await Booking.countDocuments();
     const totalRevenue = await Booking.aggregate([
       { $match: { isPaid: true } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
-    const activeShows = await Movie.countDocuments({ isShowing: true });
+
+    // Active shows means unique movies currently scheduled
+    const activeShowsCount = await Show.distinct('movie').then(movies => movies.length);
+    const totalUsers = await require('../models/User').countDocuments();
 
     const recentBookings = await Booking.find()
       .populate('show.movie')
+      .populate('user', 'name email')
       .sort({ createdAt: -1 })
       .limit(5);
 
     res.json({
       totalBookings,
       totalRevenue: totalRevenue[0]?.total || 0,
-      activeShows,
+      activeShows: activeShowsCount,
+      totalUsers,
       recentBookings,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Split Payment Endpoints
+
+// 1. Initiate split booking (authenticated)
+router.post('/split', auth, async (req, res) => {
+  try {
+    const { user, show, bookedSeats, amount, friends } = req.body;
+
+    // Create friends list with pending status
+    const friendsList = friends.map(f => ({
+      name: f.name,
+      email: f.email,
+      amount: amount / (friends.length + 1),
+      isPaid: false
+    }));
+
+    const booking = new Booking({
+      user,
+      show,
+      bookedSeats,
+      amount,
+      isPaid: false,
+      status: 'pending',
+      splitPayment: {
+        isSplit: true,
+        primaryUser: {
+          name: user.name,
+          email: user.email,
+          amount: amount / (friends.length + 1),
+          isPaid: false
+        },
+        friends: friendsList,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 mins
+      }
+    });
+
+    const savedBooking = await booking.save();
+
+    // Send invites (async)
+    savedBooking.splitPayment.friends.forEach(friend => {
+      sendSplitInvite(savedBooking, friend);
+    });
+
+    res.status(201).json(savedBooking);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// 2. Pay share (simulated for a specific user/friend by email)
+router.post('/split/:id/pay', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking || !booking.splitPayment.isSplit) {
+      return res.status(404).json({ message: 'Split booking not found' });
+    }
+
+    if (new Date() > booking.splitPayment.expiresAt) {
+      booking.status = 'expired';
+      await booking.save();
+      return res.status(400).json({ message: 'Payment window expired' });
+    }
+
+    let found = false;
+    // Check primary user
+    if (booking.splitPayment.primaryUser.email === email) {
+      booking.splitPayment.primaryUser.isPaid = true;
+      found = true;
+    } else {
+      // Check friends
+      const friend = booking.splitPayment.friends.find(f => f.email === email);
+      if (friend) {
+        friend.isPaid = true;
+        friend.paidAt = new Date();
+        found = true;
+      }
+    }
+
+    if (!found) {
+      return res.status(404).json({ message: 'User not found in this split' });
+    }
+
+    // Check if everyone has paid
+    const allPaid = booking.splitPayment.primaryUser.isPaid &&
+      booking.splitPayment.friends.every(f => f.isPaid);
+
+    if (allPaid) {
+      booking.isPaid = true;
+      booking.status = 'confirmed';
+    }
+
+    await booking.save();
+    res.json(booking);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
