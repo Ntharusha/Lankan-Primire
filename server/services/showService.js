@@ -85,6 +85,34 @@ const unlockSeat = async (showId, seatNumber, userId) => {
     );
 };
 
+const unlockAllUserSeats = async (userId) => {
+    return await Show.updateMany(
+        {
+            'seatGrid': {
+                $elemMatch: {
+                    $elemMatch: {
+                        isLocked: true,
+                        lockedBy: userId
+                    }
+                }
+            }
+        },
+        {
+            $set: {
+                'seatGrid.$[row].$[seat].isLocked': false,
+                'seatGrid.$[row].$[seat].lockedBy': null,
+                'seatGrid.$[row].$[seat].lockedAt': null
+            }
+        },
+        {
+            arrayFilters: [
+                { 'row': { $exists: true } },
+                { 'seat.isLocked': true, 'seat.lockedBy': userId }
+            ]
+        }
+    );
+};
+
 const releaseExpiredLocks = async () => {
     const lockDurationMinutes = 10;
     const lockExpiryThreshold = new Date(Date.now() - lockDurationMinutes * 60 * 1000);
@@ -120,5 +148,6 @@ const releaseExpiredLocks = async () => {
 module.exports = {
     lockSeat,
     unlockSeat,
+    unlockAllUserSeats,
     releaseExpiredLocks
 };

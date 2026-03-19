@@ -4,6 +4,7 @@ import { getMovieById } from '../services/movieService'
 import { getShowsByMovieId } from '../services/showService'
 import { Star, Clock, Calendar, ChevronRight } from 'lucide-react'
 import { getPosterUrl, getBackdropUrl, handleImageError } from '../utils/movieUtils'
+import ReviewSection from '../components/ReviewSection'
 
 const MovieDetails = () => {
   const { id } = useParams()
@@ -100,10 +101,6 @@ const MovieDetails = () => {
               {movie.overview}
             </p>
 
-            {/* Direct Book Button (Scrolls to showtimes or just links to first show?) 
-                Better to remove direct link to /book and just scroll to showtimes section. 
-                But for now let's just keep the button as a jump to shows. 
-            */}
             <a
               href="#showtimes"
               className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-xl text-lg font-bold shadow-lg shadow-red-600/30 transition-all group"
@@ -118,7 +115,6 @@ const MovieDetails = () => {
       {/* Movie Information Section */}
       <div className="px-8 md:px-32 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Poster Card */}
           <div className="md:col-span-1">
             <div className="bg-gray-800 rounded-xl overflow-hidden shadow-2xl sticky top-24">
               <img
@@ -130,7 +126,6 @@ const MovieDetails = () => {
             </div>
           </div>
 
-          {/* Details Section */}
           <div className="md:col-span-2 space-y-8">
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h3 className="text-2xl font-bold mb-4 text-red-500">About the Movie</h3>
@@ -160,7 +155,6 @@ const MovieDetails = () => {
               </div>
             </div>
 
-            {/* Showtimes Section */}
             <div id="showtimes" className="bg-gray-800 rounded-xl p-8 border border-gray-700">
               <h3 className="text-2xl font-bold mb-6 text-white">Select Showtime</h3>
               {shows.length > 0 ? (
@@ -193,6 +187,8 @@ const MovieDetails = () => {
                 </div>
               )}
             </div>
+
+            <ReviewSection movieId={id} />
           </div>
         </div>
       </div>

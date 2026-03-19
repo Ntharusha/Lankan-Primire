@@ -1,7 +1,7 @@
 import apiClient from './api';
 
-export const getAllMovies = async () => {
-    const response = await apiClient.get('/movies');
+export const getAllMovies = async (params = {}) => {
+    const response = await apiClient.get('/movies', { params });
     return response;
 };
 

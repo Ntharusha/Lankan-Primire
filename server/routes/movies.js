@@ -6,9 +6,25 @@ const { auth, admin } = require('../middleware/auth');
 // Get all movies
 router.get('/', async (req, res) => {
   try {
-    // Return all movies; let clients filter by isShowing if needed
-    // This allows the admin panel to manage all movies
-    const movies = await Movie.find().sort({ createdAt: -1 });
+    const { search, genre, isShowing } = req.query;
+    let query = {};
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { overview: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (genre) {
+      query['genres.name'] = genre;
+    }
+
+    if (isShowing !== undefined) {
+      query.isShowing = isShowing === 'true';
+    }
+
+    const movies = await Movie.find(query).sort({ createdAt: -1 });
     res.json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });

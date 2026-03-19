@@ -57,6 +57,15 @@ router.get('/date/:date', auth, async (req, res) => {
 // Create booking (authenticated)
 router.post('/', auth, async (req, res) => {
   try {
+    // 0. Check for existing booking with same paymentIntentId to prevent double bookings (idempotency)
+    if (req.body.paymentIntentId) {
+      const existing = await Booking.findOne({ paymentIntentId: req.body.paymentIntentId });
+      if (existing) {
+        console.log('Returning existing booking to prevent duplication:', existing._id);
+        return res.status(200).json(existing);
+      }
+    }
+
     // Ensure show.movie is an ObjectId referencing Movie.
     if (req.body?.show?.movie) {
       const moviePayload = req.body.show.movie
@@ -108,7 +117,14 @@ router.post('/', auth, async (req, res) => {
           });
         });
         if (changed) {
+          showDoc.markModified('seatGrid');
           await showDoc.save();
+          
+          // Emit seat_unlocked (or seat_booked) to others so they see it's unavailable
+          bookedSeats.forEach(seatNumber => {
+            req.io.to(showId).emit('seat_unlocked', { showId, seatNumber });
+          });
+
           console.log(`Updated Show ${showId} seats: ${bookedSeats.join(', ')}`);
         }
       }

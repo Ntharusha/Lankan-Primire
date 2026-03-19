@@ -7,17 +7,25 @@ import { getPosterUrl, handleImageError } from '../utils/movieUtils'
 const Movies = () => {
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState('All')
   const location = useLocation()
   
   const searchParams = new URLSearchParams(location.search)
   const searchQuery = searchParams.get('search') || ''
 
+  const genres = ['All', 'Action', 'Drama', 'Comedy', 'Thriller', 'Horror', 'Romance', 'Sci-Fi']
+
   useEffect(() => {
-    // ... (trimmed for brevity, will use full content in actual call)
     const fetchMovies = async () => {
+      setLoading(true)
       try {
-        const data = await getAllMovies()
-        setMovies(data.filter(m => m.isShowing))
+        const params = {
+          search: searchQuery,
+          isShowing: true,
+          genre: activeFilter !== 'All' ? activeFilter : undefined
+        }
+        const data = await getAllMovies(params)
+        setMovies(data)
       } catch (error) {
         console.error("Failed to fetch movies:", error)
       } finally {
@@ -25,12 +33,18 @@ const Movies = () => {
       }
     }
     fetchMovies()
-  }, [])
+  }, [searchQuery, activeFilter])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050905] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+        <div className="w-24 h-24 relative">
+          <div className="absolute inset-0 border-4 border-red-600/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-t-red-600 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[10px] font-black text-red-600 animate-pulse uppercase tracking-widest">LKR</span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -39,27 +53,62 @@ const Movies = () => {
     <div className="bg-[#050905] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-16">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Header & Search */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="border-l-4 border-red-600 pl-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-white uppercase tracking-wider">
-              All <span className="text-red-600">Movies</span>
+            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic">
+              Cinema <span className="text-red-600">Registry</span>
             </h2>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mt-2">
+              Discover the latest in Sinhala Cinema
+            </p>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 text-gray-400">
-            <span className="text-sm">{movies.length} movies available</span>
+          <div className="flex flex-wrap items-center gap-3">
+            {genres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => setActiveFilter(genre)}
+                className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeFilter === genre 
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' 
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* Results Info */}
+        {(searchQuery || activeFilter !== 'All') && (
+          <div className="mb-8 flex items-center gap-4 animate-in fade-in slide-in-from-left duration-500">
+            <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
+              Showing {movies.length} matches for
+            </span>
+            {searchQuery && (
+              <span className="bg-red-600/10 text-red-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-600/20">
+                "{searchQuery}"
+              </span>
+            )}
+            {activeFilter !== 'All' && (
+              <span className="bg-red-600/10 text-red-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-red-600/20">
+                {activeFilter}
+              </span>
+            )}
+            <button 
+              onClick={() => { setActiveFilter('All'); window.history.replaceState({}, '', '/movies'); }}
+              className="text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-widest underline underline-offset-4 decoration-red-600/50"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+
         {/* Movie Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {movies
-            .filter(m => !searchQuery || 
-               m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               m.overview?.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((movie, index) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+          {movies.map((movie, index) => (
             <div
               key={movie._id}
               className="bg-[#121418] rounded-xl overflow-hidden border border-white/5 hover:border-red-600/30 transition-all duration-500 group relative"
