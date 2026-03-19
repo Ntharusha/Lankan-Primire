@@ -36,14 +36,30 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Create a new show (admin)
-router.post('/', auth, admin, async (req, res) => {
+// Update a show (admin)
+router.put('/:id', auth, admin, async (req, res) => {
     try {
-        const show = new Show(req.body);
-        const savedShow = await show.save();
-        res.status(201).json(savedShow);
+        const show = await Show.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        ).populate('movie').populate('theater');
+
+        if (!show) return res.status(404).json({ message: 'Show not found' });
+        res.json(show);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+});
+
+// Delete a show (admin)
+router.delete('/:id', auth, admin, async (req, res) => {
+    try {
+        const show = await Show.findByIdAndDelete(req.params.id);
+        if (!show) return res.status(404).json({ message: 'Show not found' });
+        res.json({ message: 'Show deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

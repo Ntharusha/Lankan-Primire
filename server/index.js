@@ -10,7 +10,7 @@ const movieRoutes = require('./routes/movies');
 const bookingRoutes = require('./routes/bookings');
 const showRoutes = require('./routes/shows');
 const userRoutes = require('./routes/users');
-const { lockSeat, unlockSeat, releaseExpiredLocks } = require('./services/showService');
+const { lockSeat, unlockSeat, unlockAllUserSeats, releaseExpiredLocks } = require('./services/showService');
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +40,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', require('./routes/payments'));
+app.use('/api/reviews', require('./routes/reviews'));
 
 // Socket.io Logic
 io.on('connection', (socket) => {
@@ -52,8 +53,9 @@ io.on('connection', (socket) => {
 
   socket.on('lock_seat', async (data) => {
     // data: { showId, seatNumber, userId }
+    socket.userId = data.userId || socket.id; // Correctly track the ID used to lock
     try {
-      await lockSeat(data.showId, data.seatNumber, data.userId || socket.id);
+      await lockSeat(data.showId, data.seatNumber, socket.userId);
       socket.to(data.showId).emit('seat_locked', data);
     } catch (error) {
       socket.emit('error', { message: error.message, seatNumber: data.seatNumber });
@@ -69,8 +71,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
+  socket.on('disconnect', async () => {
+    if (socket.userId) {
+      try {
+        await unlockAllUserSeats(socket.userId);
+        console.log(`Unlocked all seats for user/socket: ${socket.userId}`);
+      } catch (error) {
+        console.error('Failed to unlock seats on disconnect:', error);
+      }
+    }
+    console.log('User disconnected:', socket.id);
   });
 });
 

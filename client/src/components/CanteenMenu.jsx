@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, Info, Sparkles } from 'lucide-react';
 
 const snacks = [
@@ -14,13 +14,18 @@ const CanteenMenu = ({ cart, onUpdateCart }) => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const categories = ['All', 'Snacks', 'Cold Drinks', 'Savory'];
 
-    const filteredSnacks = selectedCategory === 'All'
-        ? snacks
-        : snacks.filter(s => s.category === selectedCategory);
+    const handleImageError = (e) => {
+        e.target.src = 'https://images.unsplash.com/photo-1546241072-48010ad28c2c?w=400&q=80'; // Popcorn default
+    };
 
     const updateQuantity = (snack, delta) => {
         const currentQty = cart[snack.id]?.quantity || 0;
         const newQty = Math.max(0, currentQty + delta);
+
+        if (delta > 0) {
+            // toast.success(`Added ${snack.name}! 🍿`, { id: 'canteen-toast' }); 
+            // Better to avoid too many toasts, maybe just subtle pulse in UI
+        }
 
         if (newQty === 0) {
             const newCart = { ...cart };
@@ -35,6 +40,10 @@ const CanteenMenu = ({ cart, onUpdateCart }) => {
     };
 
     const totalItems = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+
+    const filteredSnacks = selectedCategory === 'All'
+        ? snacks
+        : snacks.filter(s => s.category === selectedCategory);
 
     return (
         <div className="w-full">
@@ -65,7 +74,12 @@ const CanteenMenu = ({ cart, onUpdateCart }) => {
                 {filteredSnacks.map((snack) => (
                     <div key={snack.id} className="glass-card rounded-[2rem] p-4 flex gap-4 hover:border-white/10 transition-all group">
                         <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0">
-                            <img src={snack.image} alt={snack.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img 
+                                src={snack.image} 
+                                alt={snack.name} 
+                                onError={handleImageError}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            />
                         </div>
 
                         <div className="flex-1 py-1">
