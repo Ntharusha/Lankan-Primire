@@ -3,13 +3,13 @@ const TMDB_BACKDROP_BASE_URL = 'https://image.tmdb.org/t/p/original';
 
 export const getPosterUrl = (path) => {
     if (!path) return 'https://placehold.co/500x750?text=No+Poster';
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('/assets/')) return path;
     return `${TMDB_IMAGE_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 export const getBackdropUrl = (path) => {
     if (!path) return 'https://placehold.co/1920x1080?text=No+Backdrop';
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('/assets/')) return path;
     return `${TMDB_BACKDROP_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
