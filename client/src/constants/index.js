@@ -7,6 +7,7 @@ export const MOVIE_GENRES = [
   'Thriller',
   'Sci-Fi',
   'Family',
+  'Crime',
 ]
 
 export const SEAT_STATUS = {

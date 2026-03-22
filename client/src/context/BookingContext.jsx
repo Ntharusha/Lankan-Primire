@@ -15,7 +15,12 @@ export const useBookings = () => {
 }
 
 export const BookingProvider = ({ children }) => {
-  const [bookings, setBookings] = useState([])
+  const [bookings, setBookings] = useState(() => {
+    // Initialize from localStorage for persistence of guest bookings
+    const local = localStorage.getItem('myBookings')
+    return local ? JSON.parse(local) : []
+  })
+
 
   const fetchBookings = async () => {
     const token = localStorage.getItem('token')
@@ -25,10 +30,16 @@ export const BookingProvider = ({ children }) => {
     }
     try {
       const data = await apiClient.get('/bookings/my')
-      setBookings(Array.isArray(data) ? data : [])
+      const remoteBookings = Array.isArray(data) ? data : []
+      
+      // Merge remote and local (guest) bookings, prioritising server versions
+      setBookings(prev => {
+        const guestOnes = prev.filter(b => b._id.toString().startsWith('BK'))
+        return [...remoteBookings, ...guestOnes]
+      })
     } catch (error) {
       console.error('Failed to fetch bookings from server', error)
-      setBookings([])
+      // Keep existing (possibly guest) bookings if fetch fails
     }
   }
 
