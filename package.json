@@ -1,0 +1,13 @@
+{
+  "name": "lankan-premiere-workspace",
+  "version": "1.0.0",
+  "description": "Root workspace for Lankan Premiere",
+  "scripts": {
+    "install:all": "npm install --prefix client && npm install --prefix server",
+    "seed:english": "node server/seed-all-english.js",
+    "seed:sinhala": "node server/seed-sinhala-movies.js",
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "dev": "npm run client & npm run server"
+  }
+}

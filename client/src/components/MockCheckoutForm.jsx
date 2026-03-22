@@ -9,6 +9,8 @@ const MockCheckoutForm = ({ onSuccess, amount, clientSecret }) => {
     const [cardName, setCardName] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
     const [cvv, setCvv] = useState('');
+    const [whatsappNumber, setWhatsappNumber] = useState('');
+
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -32,7 +34,8 @@ const MockCheckoutForm = ({ onSuccess, amount, clientSecret }) => {
                     id: response.id,
                     status: 'succeeded',
                     amount: amount * 100,
-                    currency: 'lkr'
+                    currency: 'lkr',
+                    whatsappNumber: whatsappNumber // Pass this back
                 };
 
                 onSuccess(mockPaymentIntent);
@@ -120,6 +123,21 @@ const MockCheckoutForm = ({ onSuccess, amount, clientSecret }) => {
                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary focus:outline-none"
                             />
                         </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                        <label className="block text-xs font-black text-primary uppercase tracking-widest mb-2">
+                            WhatsApp Number (For Ticket Delivery)
+                        </label>
+                        <input
+                            type="tel"
+                            placeholder="+94 7X XXX XXXX"
+                            value={whatsappNumber}
+                            onChange={(e) => setWhatsappNumber(e.target.value)}
+                            required
+                            className="w-full px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl text-white placeholder-gray-600 focus:border-primary focus:outline-none transition-all"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-2 italic font-medium">Your entry pass and QR code will be sent here.</p>
                     </div>
                 </div>
 

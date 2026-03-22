@@ -1,4 +1,8 @@
+require('dotenv').config();
 const nodemailer = require('nodemailer');
+const QRCode = require('qrcode');
+
+
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -8,54 +12,67 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendBookingConfirmation = async (booking) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: booking.user.email,
-        subject: `Lankan Premiere - Booking Confirmed: ${booking.show.movie.title}`,
-        html: `
-      <h1>Booking Confirmed!</h1>
-      <p>Dear ${booking.user.name},</p>
-      <p>Your seats ${booking.bookedSeats.join(', ')} for <b>${booking.show.movie.title}</b> have been secured.</p>
-      <p>Showtime: ${new Date(booking.show.showDateTime).toLocaleString()}</p>
-      <p>Theater: ${booking.show.theater}</p>
-      <p>Total Paid: Rs. ${booking.amount}</p>
-      <br/>
-      <p>Enjoy your movie!</p>
-    `,
-    };
-
+const sendWhatsAppConfirmation = async (booking) => {
     try {
-        await transporter.sendMail(mailOptions);
-        console.log(`Confirmation email sent to ${booking.user.email}`);
+        const phone = booking.user.phone;
+        if (!phone) {
+            console.log('No phone number for WhatsApp notification');
+            return;
+        }
+
+        // Generate QR Code URL (using a free public API for easy sharing in WhatsApp text)
+        // We could also send as attachment if using Twilio/Real API
+        const qrContent = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${booking._id}`;
+
+        const message = `
+🍿 *LANKAN PREMIERE - BOOKING CONFIRMED* 🍿
+
+Hi *${booking.user.name}*,
+
+Your tickets have been secured! 🎟️
+
+🎬 *Movie:* ${booking.show.movie.title}
+🎭 *Theater:* ${booking.show.theater}
+📅 *Showtime:* ${new Date(booking.show.showDateTime).toLocaleString()}
+💺 *Seats:* ${booking.bookedSeats.join(', ')}
+💰 *Amount:* Rs. ${booking.amount}
+
+📲 *YOUR ENTRY PASS (QR CODE):*
+${qrContent}
+
+⚠️ *PLEASE SHOW THIS MESSAGE AT THE ENTRANCE.*
+
+Enjoy your movie! 🥤✨
+        `.trim();
+
+        // SIMULATION ONLY: Log to console what would be sent
+        console.log('\n--- SIMULATED WHATSAPP MESSAGE ---');
+        console.log(`TO: ${phone}`);
+        console.log('MESSAGE:', message);
+        console.log('----------------------------------\n');
+
+        /* 
+        REAL INTEGRATION (TWILIO EXAMPLE):
+        const twilio = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+        await twilio.messages.create({
+            body: message,
+            from: 'whatsapp:+14155238886', // Twilio Sandbox Number
+            to: `whatsapp:${phone}`
+        });
+        */
     } catch (error) {
-        console.error('Error sending confirmation email:', error);
+        console.error('Error simulating WhatsApp notification:', error);
     }
 };
 
-const sendSplitInvite = async (booking, friend) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: friend.email,
-        subject: `Lankan Premiere - You're invited to a movie!`,
-        html: `
-      <h1>Movie Invitation</h1>
-      <p>Hi ${friend.name},</p>
-      <p>${booking.user.name} has invited you to watch <b>${booking.show.movie.title}</b>.</p>
-      <p>Your share for the ticket is <b>Rs. ${friend.amount}</b>.</p>
-      <p>Please pay within 15 minutes to secure the group booking.</p>
-      <a href="${process.env.FRONTEND_URL}/pay-split/${booking._id}?email=${friend.email}">Pay Now</a>
-      <br/>
-      <p>Lankan Premiere</p>
-    `,
-    };
+const sendBookingConfirmation = async (booking) => {
+    // Call WhatsApp instead of Email
+    await sendWhatsAppConfirmation(booking);
+};
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log(`Split invite sent to ${friend.email}`);
-    } catch (error) {
-        console.error('Error sending split invite:', error);
-    }
+const sendSplitInvite = async (booking, friend) => {
+    // Similarly update for WhatsApp if needed, or leave for later
+    console.log(`WhatsApp split invite would be sent to: ${friend.name}`);
 };
 
 module.exports = {

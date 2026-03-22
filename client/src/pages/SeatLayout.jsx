@@ -205,7 +205,11 @@ const SeatLayout = () => {
 
     // Create final booking
     const bookingData = {
-      user: { name: user?.name || 'Guest', email: user?.email || 'guest@example.com' },
+      user: {
+        name: user?.name || 'Guest',
+        email: user?.email || 'guest@example.com',
+        phone: paymentIntent.whatsappNumber || '' // WhatsApp number from form
+      },
       show: {
         movie: show.movie?._id || show.movie,
         showDateTime: show.dateTime,
