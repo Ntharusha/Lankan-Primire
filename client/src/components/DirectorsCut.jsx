@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ChevronRight, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import apiClient from '../services/api';
-import { getPosterUrl } from '../utils/movieUtils';
+import { getRecommendations } from '../services/movieService';
+import { getPosterUrl, getBackdropUrl } from '../utils/movieUtils';
 import { useAuth } from '../context/AuthContext';
 
 const DirectorsCut = () => {
@@ -17,7 +17,7 @@ const DirectorsCut = () => {
         const fetchRecommendations = async () => {
             setLoading(true);
             try {
-                const data = await apiClient.get('/movies/recommendations');
+                const data = await getRecommendations();
                 setRecommendations(data);
             } catch (error) {
                 console.error("Failed to fetch recommendations:", error);
@@ -66,10 +66,10 @@ const DirectorsCut = () => {
                             transition={{ delay: index * 0.1 }}
                             className="group relative"
                         >
-                            <Link to={`/movie/${movie._id}`}>
+                            <Link to={`/movies/${movie._id}`}>
                                 <div className="glass-card rounded-[3rem] overflow-hidden border-white/5 relative aspect-[16/10] group-hover:border-primary/30 transition-all duration-700">
                                     <img 
-                                        src={getPosterUrl(movie.backdrop_path)} 
+                                        src={getBackdropUrl(movie.backdrop_path)} 
                                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
                                         alt={movie.title}
                                     />
