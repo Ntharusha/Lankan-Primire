@@ -9,3 +9,8 @@ export const getMovieById = async (id) => {
     const response = await apiClient.get(`/movies/${id}`);
     return response;
 };
+
+export const getRecommendations = async () => {
+    const response = await apiClient.get('/movies/recommendations');
+    return response;
+};
