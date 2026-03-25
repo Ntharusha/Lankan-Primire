@@ -93,7 +93,7 @@ const AdminShows = () => {
       await apiClient.delete(`/shows/${id}`)
       setShows(prev => prev.filter(s => s._id !== id))
       toast.success('Show deleted')
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete show')
     }
   }

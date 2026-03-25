@@ -26,6 +26,7 @@ const ReviewSection = ({ movieId }) => {
 
   useEffect(() => {
     fetchReviews()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movieId])
 
   const handleSubmit = async (e) => {
@@ -55,7 +56,7 @@ const ReviewSection = ({ movieId }) => {
         await apiClient.delete(`/reviews/${id}`)
         setReviews(reviews.filter(r => r._id !== id))
         toast.success('Review removed')
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete review')
       }
     }

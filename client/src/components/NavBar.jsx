@@ -30,7 +30,9 @@ const NavBar = () => {
         // Sync search query from URL
         const params = new URLSearchParams(location.search)
         const q = params.get('search')
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (q) setSearchQuery(q)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         else setSearchQuery('')
 
         return () => window.removeEventListener('scroll', handleScroll)

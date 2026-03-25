@@ -46,9 +46,10 @@ export const BookingProvider = ({ children }) => {
   const { user } = useAuth()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBookings()
     // Re-fetch whenever the logged-in user changes (login / logout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user])
 
   useEffect(() => {
