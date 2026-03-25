@@ -46,6 +46,11 @@ const bookingSchema = new mongoose.Schema({
     price: Number,
     quantity: Number,
   }],
+  canteenStatus: {
+    type: String,
+    enum: ['preparing', 'delivering', 'delivered'],
+    default: 'preparing'
+  },
   amount: {
     type: Number,
     required: true,

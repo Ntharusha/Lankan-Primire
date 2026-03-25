@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
 
-const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap }) => {
+const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap, friendsSeats = [] }) => {
+    const isFriendSeat = (seatNumber) => friendsSeats.some(f => f.seatNumber === seatNumber);
+    const getFriendName = (seatNumber) => friendsSeats.find(f => f.seatNumber === seatNumber)?.friendName || 'Friend';
     const getSeatColor = (seat) => {
         if (seat.isLocked) return '#4A5568'; // Locked/Gray
         if (!seat.isAvailable) return '#E53E3E'; // Occupied/Red
@@ -49,6 +52,7 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap }) => {
                             const y = 50 + rowIndex * 60;
                             const isSelected = selectedSeats.includes(seat.seatNumber);
                             const hStyle = getHeatmapStyle(seat.seatNumber);
+                            const sitsFriend = isFriendSeat(seat.seatNumber);
 
                             return (
                                 <motion.g
@@ -82,6 +86,14 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap }) => {
                                     {seat.isLocked && (
                                         <circle cx={x + 35} cy={y + 5} r="5" fill="#FBD38D" />
                                     )}
+
+                                    {sitsFriend && !isSelected && (
+                                        <g>
+                                            <circle cx={x + 20} cy={y-8} r="10" fill="#00FF88" className="animate-pulse" />
+                                            <Users size={12} x={x + 14} y={y - 14} className="text-black" />
+                                            <text x={x+20} y={y-22} textAnchor="middle" className="text-[8px] fill-[#00FF88] font-black uppercase tracking-widest">{getFriendName(seat.seatNumber)}</text>
+                                        </g>
+                                    )}
                                 </motion.g>
                             );
                         })}
@@ -114,6 +126,10 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap }) => {
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded bg-[#4A5568] opacity-60 border border-white/10"></div>
                         <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Locked</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-[#00FF88] shadow-[0_0_10px_#00FF88]"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#00FF88]">Friend</span>
                     </div>
                 </div>
 
