@@ -1,6 +1,7 @@
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 
+jest.setTimeout(60000); // 60s for binary download
 let mongoServer;
 
 beforeAll(async () => {
@@ -14,10 +15,4 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    const collection = collections[key];
-    await collection.deleteMany();
-  }
-});
+// Collections are destroyed when mongoServer stops in afterAll
