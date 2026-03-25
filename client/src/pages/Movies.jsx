@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getAllMovies } from '../services/movieService'
-import { Calendar, Clock, Star, Play, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, Star, Play, ChevronRight, Search } from 'lucide-react'
 import { getPosterUrl, handleImageError } from '../utils/movieUtils'
 
 const Movies = () => {
@@ -9,6 +9,7 @@ const Movies = () => {
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('All')
   const location = useLocation()
+  const navigate = useNavigate()
   
   const searchParams = new URLSearchParams(location.search)
   const searchQuery = searchParams.get('search') || ''
@@ -98,7 +99,7 @@ const Movies = () => {
               </span>
             )}
             <button 
-              onClick={() => { setActiveFilter('All'); window.history.replaceState({}, '', '/movies'); }}
+              onClick={() => { setActiveFilter('All'); navigate('/movies'); }}
               className="text-[10px] font-black text-gray-600 hover:text-white uppercase tracking-widest underline underline-offset-4 decoration-red-600/50"
             >
               Clear All
@@ -107,95 +108,113 @@ const Movies = () => {
         )}
 
         {/* Movie Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-          {movies.map((movie, index) => (
-            <div
-              key={movie._id}
-              className="bg-[#121418] rounded-xl overflow-hidden border border-white/5 hover:border-red-600/30 transition-all duration-500 group relative"
-            >
-              {/* Number Badge */}
-              <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-                {index + 1}
-              </div>
+        {movies.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+            {movies.map((movie, index) => (
+              <div
+                key={movie._id}
+                className="bg-[#121418] rounded-xl overflow-hidden border border-white/5 hover:border-red-600/30 transition-all duration-500 group relative"
+              >
+                {/* Number Badge */}
+                <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                  {index + 1}
+                </div>
 
-              {/* Poster Image */}
-              <div className="relative aspect-[2/3] overflow-hidden">
-                <img
-                  src={getPosterUrl(movie.poster_path)}
-                  alt={movie.title}
-                  onError={handleImageError}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                {/* Poster Image */}
+                <div className="relative aspect-[2/3] overflow-hidden">
+                  <img
+                    src={getPosterUrl(movie.poster_path)}
+                    alt={movie.title}
+                    onError={handleImageError}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-                {/* Play Button */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-50 group-hover:scale-100">
-                  <div className="bg-red-600 rounded-full p-3 cursor-pointer hover:bg-red-700 transition-colors">
-                    <Link to={`/movies/${movie._id}`}>
-                      <Play className="w-6 h-6 text-white fill-current" />
+                  {/* Play Button */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-50 group-hover:scale-100">
+                    <div className="bg-red-600 rounded-full p-3 cursor-pointer hover:bg-red-700 transition-colors">
+                      <Link to={`/movies/${movie._id}`}>
+                        <Play className="w-6 h-6 text-white fill-current" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Rating Badge */}
+                  <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/10">
+                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    <span className="text-white text-[10px] font-bold">{movie.vote_average}</span>
+                  </div>
+
+                  {/* Book Button on Overlay */}
+                  <div className="absolute bottom-3 left-0 right-0 px-3 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    <Link to={`/movies/${movie._id}`} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg w-full text-center block text-xs font-bold shadow-lg">
+                      BOOK NOW
                     </Link>
                   </div>
                 </div>
 
-                {/* Rating Badge */}
-                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/10">
-                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                  <span className="text-white text-[10px] font-bold">{movie.vote_average}</span>
-                </div>
+                {/* Movie Info */}
+                <div className="p-3 bg-[#121418]">
+                  <h3 className="text-sm font-bold text-white mb-1 truncate group-hover:text-red-600 transition-colors">
+                    {movie.title}
+                  </h3>
 
-                {/* Book Button on Overlay */}
-                <div className="absolute bottom-3 left-0 right-0 px-3 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                  <Link to={`/movies/${movie._id}`} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg w-full text-center block text-xs font-bold shadow-lg">
-                    BOOK NOW
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                    <span className="flex items-center gap-0.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      {movie.runtime}m
+                    </span>
+                    <span className="text-gray-700">|</span>
+                    <span className="truncate">{movie.genres && movie.genres[0]?.name}</span>
+                  </div>
+
+                  {/* Genres */}
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {movie.genres && movie.genres.slice(0, 2).map((genre) => (
+                      <span
+                        key={genre.id || genre._id}
+                        className="bg-red-600/20 text-red-400 text-[9px] px-1.5 py-0.5 rounded-full"
+                      >
+                        {genre.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Tagline */}
+                  <p className="text-gray-600 text-[9px] italic truncate mb-2">
+                    "{movie.tagline || 'Experience the magic'}"
+                  </p>
+
+                  {/* Mobile Book Button */}
+                  <Link
+                    to={`/movies/${movie._id}`}
+                    className="md:hidden w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Get Tickets
                   </Link>
                 </div>
               </div>
-
-              {/* Movie Info */}
-              <div className="p-3 bg-[#121418]">
-                <h3 className="text-sm font-bold text-white mb-1 truncate group-hover:text-red-600 transition-colors">
-                  {movie.title}
-                </h3>
-
-                <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
-                  <span className="flex items-center gap-0.5">
-                    <Clock className="w-2.5 h-2.5" />
-                    {movie.runtime}m
-                  </span>
-                  <span className="text-gray-700">|</span>
-                  <span className="truncate">{movie.genres && movie.genres[0]?.name}</span>
-                </div>
-
-                {/* Genres */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {movie.genres && movie.genres.slice(0, 2).map((genre) => (
-                    <span
-                      key={genre.id || genre._id}
-                      className="bg-red-600/20 text-red-400 text-[9px] px-1.5 py-0.5 rounded-full"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Tagline */}
-                <p className="text-gray-600 text-[9px] italic truncate mb-2">
-                  "{movie.tagline || 'Experience the magic'}"
-                </p>
-
-                {/* Mobile Book Button */}
-                <Link
-                  to={`/movies/${movie._id}`}
-                  className="md:hidden w-full bg-red-600 hover:bg-red-700 text-white text-center py-2 rounded-lg text-xs font-medium transition-colors"
-                >
-                  Get Tickets
-                </Link>
-              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center animate-in zoom-in duration-500">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/5 border border-white/10 mb-6 group-hover:border-red-600/50 transition-colors">
+               <Search className="w-8 h-8 text-gray-600" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-xl font-bold text-white mb-2">No Movies Found</h3>
+            <p className="text-gray-500 text-sm max-w-xs mx-auto mb-8 font-medium">
+              We couldn't find any movies matching your current search or selection.
+            </p>
+            <button 
+              onClick={() => { setActiveFilter('All'); navigate('/movies'); }}
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+            >
+              Reset Search
+            </button>
+          </div>
+        )}
 
         {/* Coming Soon Section */}
         <div className="mt-16">

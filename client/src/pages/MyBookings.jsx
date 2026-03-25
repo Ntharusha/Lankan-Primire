@@ -5,8 +5,11 @@ import { useBookings } from '../context/BookingContext'
 import TicketWallet from '../components/TicketWallet'
 import { AnimatePresence, motion } from 'framer-motion'
 import { getPosterUrl } from '../utils/movieUtils'
+import { useAuth } from '../context/AuthContext'
+import LoyaltyBadge from '../components/LoyaltyBadge'
 
 const MyBookings = () => {
+    const { user } = useAuth()
     const { bookings, removeBooking, getUpcomingBookings, getPastBookings } = useBookings()
     const [viewingBooking, setViewingBooking] = useState(null)
 
@@ -62,19 +65,30 @@ const MyBookings = () => {
                         </h1>
                     </motion.div>
                     
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="glass-card px-8 py-4 rounded-3xl border-primary/20 bg-primary/5 flex items-center gap-6"
-                    >
-                        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white font-black italic shadow-lg shadow-primary/30">
-                            {bookings.length}
-                        </div>
-                        <div className="text-left">
-                            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Digital Wallet</p>
-                            <p className="text-white font-black uppercase text-sm">Active Reservations</p>
-                        </div>
-                    </motion.div>
+                    <div className="flex flex-col sm:flex-row gap-6">
+                        {user && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <LoyaltyBadge points={user.loyaltyPoints} />
+                            </motion.div>
+                        )}
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="glass-card px-8 py-4 rounded-3xl border-primary/20 bg-primary/5 flex items-center gap-6"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white font-black italic shadow-lg shadow-primary/30">
+                                {bookings.length}
+                            </div>
+                            <div className="text-left">
+                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Digital Wallet</p>
+                                <p className="text-white font-black uppercase text-sm">Active Reservations</p>
+                            </div>
+                        </motion.div>
+                    </div>
                 </div>
 
                 {/* Upcoming Section */}
@@ -222,7 +236,7 @@ const MyBookings = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {pastBookings.map((booking) => (
-                                <div key={booking._id} className="glass-card rounded-[2.5rem] p-6 border-white/5 opacity-40 hover:opacity-100 transition-all duration-700 group grayscale hover:grayscale-0">
+                                <div key={booking._id} className="glass-card rounded-[2.5rem] p-6 border-white/5 opacity-60 hover:opacity-100 transition-all duration-700 group grayscale hover:grayscale-0">
                                     <div className="flex items-center gap-6">
                                         <div className="w-24 h-32 rounded-2xl overflow-hidden border border-white/5">
                                             <img 

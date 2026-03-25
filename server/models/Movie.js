@@ -44,6 +44,10 @@ const movieSchema = new mongoose.Schema({
   tagline: {
     type: String,
   },
+  trailerUrl: {
+    type: String,
+    default: null,
+  },
   vote_average: {
     type: Number,
     default: 0,

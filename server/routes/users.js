@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, loyaltyPoints: user.loyaltyPoints } });
             }
         );
     } catch (err) {
@@ -75,7 +75,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, loyaltyPoints: user.loyaltyPoints } });
             }
         );
     } catch (err) {

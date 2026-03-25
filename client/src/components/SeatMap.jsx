@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const SeatMap = ({ seatGrid, selectedSeats, onSeatClick }) => {
+const SeatMap = ({ seatGrid, selectedSeats, onSeatClick, heatmap }) => {
     const getSeatColor = (seat) => {
         if (seat.isLocked) return '#4A5568'; // Locked/Gray
         if (!seat.isAvailable) return '#E53E3E'; // Occupied/Red
@@ -14,6 +14,24 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick }) => {
             case 'Couple': return '#FF69B4';
             default: return '#2D3748'; // ODC/Default
         }
+    };
+
+    const getHeatmapStyle = (seatNumber) => {
+        if (!heatmap || !heatmap.seatPopularity) return null;
+        const count = heatmap.seatPopularity[seatNumber] || 0;
+        if (count === 0) return null;
+
+        const ratio = count / heatmap.maxCount;
+        let color = '#00D2FF'; // Cold
+        if (ratio > 0.7) color = '#F84565'; // Hot
+        else if (ratio > 0.4) color = '#FFD700'; // Warm
+
+        return {
+            stroke: color,
+            strokeWidth: 3,
+            filter: `drop-shadow(0 0 8px ${color})`,
+            strokeOpacity: 0.8
+        };
     };
 
     return (
@@ -30,6 +48,7 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick }) => {
                             const x = 50 + seatIndex * 60;
                             const y = 50 + rowIndex * 60;
                             const isSelected = selectedSeats.includes(seat.seatNumber);
+                            const hStyle = getHeatmapStyle(seat.seatNumber);
 
                             return (
                                 <motion.g
@@ -45,10 +64,11 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick }) => {
                                         height="40"
                                         rx="8"
                                         fill={getSeatColor(seat)}
-                                        className="transition-colors duration-300"
+                                        className="transition-all duration-500"
                                         fillOpacity={isSelected ? 1 : 0.6}
-                                        stroke={isSelected ? "#00D2FF" : "rgba(255,255,255,0.1)"}
-                                        strokeWidth={isSelected ? "2" : "1"}
+                                        stroke={isSelected ? "#00D2FF" : (hStyle?.stroke || "rgba(255,255,255,0.1)")}
+                                        strokeWidth={isSelected ? "2" : (hStyle?.strokeWidth || "1")}
+                                        style={!isSelected ? hStyle : {}}
                                     />
                                     <text
                                         x={x + 20}
@@ -69,31 +89,50 @@ const SeatMap = ({ seatGrid, selectedSeats, onSeatClick }) => {
                 ))}
             </svg>
 
-            <div className="flex flex-wrap justify-center gap-6 mt-12 p-6 glass-card rounded-2xl">
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#2D3748] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">ODC</span>
+            <div className="flex flex-col items-center gap-6 mt-12 w-full">
+                <div className="flex flex-wrap justify-center gap-6 p-6 glass-card rounded-2xl w-full">
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#2D3748] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">ODC</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#00D2FF] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Balcony</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#FFD700] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Box</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#FF69B4] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Couple</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#E53E3E] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Occupied</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-[#4A5568] opacity-60 border border-white/10"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Locked</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#00D2FF] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">Balcony</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#FFD700] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">Box</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#FF69B4] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">Couple</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#E53E3E] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">Occupied</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-[#4A5568] opacity-60 border border-white/10"></div>
-                    <span className="text-sm">Locked</span>
-                </div>
+
+                {heatmap && (
+                    <div className="flex items-center gap-8 px-8 py-4 glass-card rounded-2xl border-primary/20 animate-in fade-in zoom-in duration-500">
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-[#F84565] shadow-[0_0_8px_#F84565]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Top Pick</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-[#FFD700] shadow-[0_0_8px_#FFD700]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Popular</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-[#00D2FF] shadow-[0_0_8px_#00D2FF]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Steady</span>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
