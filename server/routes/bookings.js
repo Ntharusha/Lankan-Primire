@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const Booking = require('../models/Booking');
 const Movie = require('../models/Movie');
 const Show = require('../models/Show');
+const User = require('../models/User');
 const { sendBookingConfirmation, sendSplitInvite } = require('../services/notificationService');
 const { auth, admin } = require('../middleware/auth');
 
@@ -130,12 +131,13 @@ router.post('/', auth, async (req, res) => {
       }
     }
 
-    // Send confirmation email
-    sendBookingConfirmation(populated);
-
-    // Emit real-time update for admin dashboard
-    if (req.io) {
-      req.io.emit('booking_completed', populated);
+    // Award loyalty points to the user who made the booking
+    if (req.user) {
+      const pointsToAward = Math.floor(savedBooking.amount / 100);
+      if (pointsToAward > 0) {
+        await User.findByIdAndUpdate(req.user._id, { $inc: { loyaltyPoints: pointsToAward } });
+        console.log(`🏆 Awarded ${pointsToAward} loyalty points to user ${req.user._id}`);
+      }
     }
 
     res.status(201).json(populated);
@@ -296,6 +298,27 @@ router.post('/split/:id/pay', async (req, res) => {
     if (allPaid) {
       booking.isPaid = true;
       booking.status = 'confirmed';
+
+      // Award points to participants who have accounts
+      try {
+        const primaryUser = await User.findOne({ email: booking.splitPayment.primaryUser.email });
+        if (primaryUser) {
+          await User.findByIdAndUpdate(primaryUser._id, { 
+            $inc: { loyaltyPoints: Math.floor(booking.splitPayment.primaryUser.amount / 100) } 
+          });
+        }
+        for (const friend of booking.splitPayment.friends) {
+          const friendUser = await User.findOne({ email: friend.email });
+          if (friendUser) {
+            await User.findByIdAndUpdate(friendUser._id, { 
+              $inc: { loyaltyPoints: Math.floor(friend.amount / 100) } 
+            });
+          }
+        }
+        console.log(`🏆 Awarded split payment loyalty points for booking ${booking._id}`);
+      } catch (err) {
+        console.error("Failed to award split loyalty points:", err);
+      }
     }
 
     await booking.save();

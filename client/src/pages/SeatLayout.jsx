@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Monitor, Check, Clock, Utensils, X, Loader2 } from 'lucide-react';
+import { ChevronLeft, Monitor, Check, Clock, Utensils, X, Loader2, Flame } from 'lucide-react';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import SeatMap from '../components/SeatMap';
@@ -33,10 +33,13 @@ const SeatLayout = () => {
   const [isCanteenOpen, setIsCanteenOpen] = useState(false);
   const [userId, setUserId] = useState(null);
 
-  // Payment State
   const [clientSecret, setClientSecret] = useState("");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [preparingPayment, setPreparingPayment] = useState(false);
+  
+  // Heatmap State
+  const [heatmap, setHeatmap] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // Initialize User/Guest ID
   useEffect(() => {
@@ -211,7 +214,7 @@ const SeatLayout = () => {
         phone: paymentIntent.whatsappNumber || '' // WhatsApp number from form
       },
       show: {
-        movie: show.movie?._id || show.movie,
+        movie: show.movie,
         showDateTime: show.dateTime,
         showPrice: ticketPrice,
         theater: show.theater?.name || show.theater || 'Unknown Theater',
@@ -234,6 +237,20 @@ const SeatLayout = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const toggleHeatmap = async () => {
+    if (!showHeatmap && !heatmap) {
+        try {
+            const data = await apiClient.get(`/shows/${id}/heatmap`);
+            setHeatmap(data);
+        } catch (error) {
+            console.error("Heatmap fetch failed:", error);
+            toast.error("Failed to load popularity data");
+            return;
+        }
+    }
+    setShowHeatmap(!showHeatmap);
   };
 
   if (loading) return (
@@ -271,6 +288,18 @@ const SeatLayout = () => {
               </div>
             )}
             <button
+              onClick={toggleHeatmap}
+              className={`glass-card px-6 py-3 rounded-2xl flex items-center gap-4 transition-all border-none relative group ${showHeatmap ? 'bg-orange-500/20 ring-2 ring-orange-500/50' : ''}`}
+            >
+              <div className={`p-2 rounded-xl transition-colors ${showHeatmap ? 'bg-orange-500 text-white animate-pulse' : 'bg-white/5 text-orange-500 group-hover:bg-white/10'}`}>
+                <Flame size={20} fill={showHeatmap ? "currentColor" : "none"} />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] text-gray-500 font-bold uppercase">View Seat</p>
+                <p className={`text-sm font-black uppercase italic ${showHeatmap ? 'text-orange-500' : 'text-white'}`}>Popularity</p>
+              </div>
+            </button>
+            <button
               onClick={() => setIsCanteenOpen(true)}
               className="glass-card px-6 py-3 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all border-none relative group"
             >
@@ -302,6 +331,7 @@ const SeatLayout = () => {
                 })))}
                 selectedSeats={selectedSeats}
                 onSeatClick={toggleSeat}
+                heatmap={showHeatmap ? heatmap : null}
               />
             </div>
           </div>

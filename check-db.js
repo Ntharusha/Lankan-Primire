@@ -10,7 +10,8 @@ async function checkBookings() {
     const bookings = await Booking.find().populate('show.movie');
     console.log('Total bookings found:', bookings.length);
     bookings.forEach(b => {
-      console.log(`Booking ID: ${b._id}, User: ${b.user.email}, isPaid: ${b.isPaid}, Amount: ${b.amount}`);
+      const movieTitle = b.show?.movie?.title || 'NULL MOVIE';
+      console.log(`Booking ID: ${b._id}, Movie: ${movieTitle}, User: ${b.user.email}, isPaid: ${b.isPaid}, Amount: ${b.amount}`);
     });
     await mongoose.disconnect();
   } catch (err) {

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Movie = require('./models/Movie');
 const Theater = require('./models/Theater');
 const Show = require('./models/Show');
+const Booking = require('./models/Booking');
 require('dotenv').config();
 
 const englishMovies = [
@@ -101,10 +102,11 @@ async function seedEnglishMovies() {
         console.log('Connected to MongoDB...');
 
         // Clear existing data
-        console.log('Removing existing movies, theaters, and shows...');
+        console.log('Removing existing movies, theaters, shows and bookings...');
         await Movie.deleteMany({});
         await Theater.deleteMany({});
         await Show.deleteMany({});
+        await Booking.deleteMany({});
 
         // Create Theaters
         const theaters = [];

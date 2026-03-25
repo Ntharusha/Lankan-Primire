@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getMovieById } from '../services/movieService'
 import { getShowsByMovieId } from '../services/showService'
-import { Star, Clock, Calendar, ChevronRight } from 'lucide-react'
+import { Star, Clock, Calendar, ChevronRight, Play } from 'lucide-react'
 import { getPosterUrl, getBackdropUrl, handleImageError } from '../utils/movieUtils'
 import ReviewSection from '../components/ReviewSection'
+import TrailerModal from '../components/TrailerModal'
 
 const MovieDetails = () => {
   const { id } = useParams()
@@ -12,6 +13,7 @@ const MovieDetails = () => {
   const [shows, setShows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showTrailer, setShowTrailer] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +37,24 @@ const MovieDetails = () => {
       fetchData()
     }
   }, [id])
+
+  useEffect(() => {
+    if (movie) {
+      const stored = localStorage.getItem('recentlyViewed');
+      let recent = stored ? JSON.parse(stored) : [];
+      // Remove if already exists to move to front
+      recent = recent.filter(m => m._id !== movie._id);
+      recent.unshift({
+        _id: movie._id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+        runtime: movie.runtime
+      });
+      // Keep only last 10
+      localStorage.setItem('recentlyViewed', JSON.stringify(recent.slice(0, 10)));
+    }
+  }, [movie]);
 
   if (loading) {
     return (
@@ -101,13 +121,26 @@ const MovieDetails = () => {
               {movie.overview}
             </p>
 
-            <a
-              href="#showtimes"
-              className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-xl text-lg font-bold shadow-lg shadow-red-600/30 transition-all group"
-            >
-              Book Tickets
-              <ChevronRight className="w-6 h-6 ml-2 transform group-hover:translate-x-1 transition-transform" />
-            </a>
+            <div className="flex items-center gap-4 flex-wrap">
+              <a
+                href="#showtimes"
+                className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-xl text-lg font-bold shadow-lg shadow-red-600/30 transition-all group"
+              >
+                Book Tickets
+                <ChevronRight className="w-6 h-6 ml-2 transform group-hover:translate-x-1 transition-transform" />
+              </a>
+              {movie.trailerUrl && (
+                <button
+                  onClick={() => setShowTrailer(true)}
+                  className="inline-flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-xl text-lg font-bold backdrop-blur-md transition-all group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-red-600 transition-colors">
+                    <Play className="w-4 h-4 fill-current" />
+                  </div>
+                  Watch Trailer
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -192,6 +225,9 @@ const MovieDetails = () => {
           </div>
         </div>
       </div>
+      {showTrailer && movie.trailerUrl && (
+        <TrailerModal trailerUrl={movie.trailerUrl} onClose={() => setShowTrailer(false)} />
+      )}
     </div>
   )
 }
