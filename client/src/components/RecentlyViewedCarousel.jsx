@@ -11,8 +11,9 @@ const RecentlyViewedCarousel = () => {
         const stored = localStorage.getItem('recentlyViewed');
         if (stored) {
             try {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setRecentMovies(JSON.parse(stored));
-            } catch (e) {
+            } catch {
                 console.error("Failed to parse recently viewed movies");
             }
         }

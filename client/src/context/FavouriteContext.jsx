@@ -20,6 +20,7 @@ export const FavouriteProvider = ({ children }) => {
     const key = user ? `favourites_${user._id || user.id}` : 'favourites_guest'
     const saved = localStorage.getItem(key)
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       try { setFavourites(JSON.parse(saved)) } catch { setFavourites([]) }
     } else {
       setFavourites([])

@@ -31,6 +31,7 @@ const defaultSettings = {
   serviceFeePercent: 5,
 }
 
+// eslint-disable-next-line no-unused-vars
 const Section = ({ title, icon: Icon, children }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -85,6 +86,7 @@ const AdminSettings = () => {
   useEffect(() => {
     const stored = localStorage.getItem(SETTINGS_KEY)
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect, no-empty
       try { setSettings({ ...defaultSettings, ...JSON.parse(stored) }) } catch { }
     }
   }, [])

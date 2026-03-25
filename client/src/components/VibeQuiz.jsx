@@ -68,8 +68,10 @@ const VibeQuiz = ({ movies, onClose }) => {
 
         const matches = movies.filter(m => m.moodTags?.includes(targetMood));
         if (matches.length > 0) {
+            // eslint-disable-next-line react-hooks/purity
             setResult(matches[Math.floor(Math.random() * matches.length)]);
         } else if (movies.length > 0) {
+            // eslint-disable-next-line react-hooks/purity
             setResult(movies[Math.floor(Math.random() * movies.length)]);
         }
         setStep(questions.length);

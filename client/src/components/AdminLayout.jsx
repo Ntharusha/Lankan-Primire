@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { 
-  Activity, 
-  Film, 
-  Calendar, 
-  Users, 
-  Settings, 
+import {
+  Activity,
+  Film,
+  Calendar,
+  Users,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -33,7 +33,7 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-[#050905] flex">
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-nebula-deep/80 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -68,8 +68,8 @@ const AdminLayout = () => {
                     onClick={() => setIsSidebarOpen(false)}
                     className={`
                       flex items-center gap-3 px-5 py-4 rounded-xl transition-all duration-300 group
-                      ${active 
-                        ? 'bg-primary/10 text-primary font-black shadow-inner shadow-primary/10' 
+                      ${active
+                        ? 'bg-primary/10 text-primary font-black shadow-inner shadow-primary/10'
                         : 'text-gray-400 font-bold hover:bg-white/5 hover:text-white'}
                     `}
                   >
@@ -83,7 +83,7 @@ const AdminLayout = () => {
         </nav>
 
         <div className="p-6">
-          <button 
+          <button
             onClick={logout}
             className="flex items-center justify-center gap-3 w-full py-4 glass-card rounded-xl font-black text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 hover:border-red-500/20 transition-all border-none"
           >
@@ -97,13 +97,13 @@ const AdminLayout = () => {
       <div className="flex-1 flex flex-col min-h-screen bg-transparent max-w-full overflow-hidden">
         {/* Top bar */}
         <header className="h-24 px-8 flex items-center justify-between border-b border-white/5 bg-[#0B0E14]/50 backdrop-blur-xl sticky top-0 z-30">
-          <button 
+          <button
             className="lg:hidden p-3 glass-card rounded-xl border-none hover:bg-white/5"
             onClick={() => setIsSidebarOpen(true)}
           >
             <Menu className="text-white" size={24} />
           </button>
-          
+
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 glass-card rounded-2xl border-white/5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">System Online</span>

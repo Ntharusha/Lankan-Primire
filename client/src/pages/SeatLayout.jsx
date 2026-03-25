@@ -158,6 +158,12 @@ const SeatLayout = () => {
   }, [selectedSeats.length, id, userId]);
 
   const toggleSeat = (seatId) => {
+    if (!user) {
+      toast.error("Please login to secure a seat");
+      navigate('/login');
+      return;
+    }
+
     if (lockedSeats.includes(seatId)) {
       toast.error("Seat is already locked by another user");
       return;
