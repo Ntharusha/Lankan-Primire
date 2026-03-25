@@ -40,6 +40,7 @@ const SeatLayout = () => {
   // Heatmap State
   const [heatmap, setHeatmap] = useState(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [friendsSeats, setFriendsSeats] = useState([]); // Array of { seatNumber, friendName }
 
   // Initialize User/Guest ID
   useEffect(() => {
@@ -93,8 +94,19 @@ const SeatLayout = () => {
 
     if (userId) {
       fetchShow();
+      // Initially fetch friend's seats for the show 
+      if (user) {
+        // Mocked friendship seats fetching for now
+        // A production version would call apiClient.get(`/shows/${id}/friends-seats`)
+        const mockFriends = [
+            { seatNumber: 'A5', friendName: 'Ntharusha' },
+            { seatNumber: 'A6', friendName: 'Ntharusha' },
+            { seatNumber: 'C10', friendName: 'Ghost69' }
+        ];
+        setFriendsSeats(mockFriends);
+      }
     }
-  }, [id, userId]);
+  }, [id, userId, user]);
 
   // Socket Listeners
   useEffect(() => {
@@ -279,7 +291,14 @@ const SeatLayout = () => {
             </button>
             <div>
               <h1 className="text-4xl font-black text-gradient uppercase tracking-tighter italic">{show.movie?.title || 'Loading...'}</h1>
-              <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{show.theater?.name || ''} • {movieDate}</p>
+              <div className="flex items-center gap-4 mt-2">
+                <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{show.theater?.name || ''} • {movieDate}</p>
+                {show.pricingBadge && (
+                  <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full animate-pulse shadow-lg ${show.pricingBadge.includes('Surge') ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-green-500/20 text-green-500 border border-green-500/30'}`}>
+                    {show.pricingBadge}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -338,6 +357,7 @@ const SeatLayout = () => {
                 selectedSeats={selectedSeats}
                 onSeatClick={toggleSeat}
                 heatmap={showHeatmap ? heatmap : null}
+                friendsSeats={friendsSeats}
               />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'qrcode';
-import { Download, Share2, MapPin, Calendar, Clock, Ticket as TicketIcon, Utensils, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Download, Share2, MapPin, Calendar, Clock, Ticket as TicketIcon, Utensils, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { getPosterUrl, getBackdropUrl } from '../utils/movieUtils';
 
 const TicketWallet = ({ booking, onClose }) => {
@@ -163,6 +163,28 @@ const TicketWallet = ({ booking, onClose }) => {
                                         <span className="text-xs font-black text-gray-500 italic">Pre-paid</span>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Live Delivery Tracker */}
+                            <div className="mb-8 p-6 glass-card rounded-2xl border-primary/20 bg-primary/5">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-6">Live Seat Delivery Tracker</h3>
+                                <div className="flex items-center justify-between relative mt-4">
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/10 rounded-full z-0"></div>
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-primary to-green-500 rounded-full z-0 transition-all duration-1000" style={{ width: booking.canteenStatus === 'delivered' ? '100%' : booking.canteenStatus === 'delivering' ? '50%' : '0%' }}></div>
+                                    
+                                    <div className="relative z-10 flex flex-col items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${!booking.canteenStatus || booking.canteenStatus === 'preparing' || booking.canteenStatus === 'delivering' || booking.canteenStatus === 'delivered' ? 'bg-primary text-white shadow-[0_0_15px_#F8456566]' : 'bg-gray-800 text-gray-500'}`}><Utensils size={14} /></div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${!booking.canteenStatus || booking.canteenStatus === 'preparing' ? 'text-primary' : 'text-gray-500'}`}>Preparing</span>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${booking.canteenStatus === 'delivering' || booking.canteenStatus === 'delivered' ? 'bg-primary text-white shadow-[0_0_15px_#F8456566]' : 'bg-gray-800 text-gray-500'}`}><MapPin size={14} /></div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${booking.canteenStatus === 'delivering' ? 'text-primary' : 'text-gray-500'}`}>En Route</span>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${booking.canteenStatus === 'delivered' ? 'bg-green-500 text-white shadow-[0_0_15px_#00FF8866]' : 'bg-gray-800 text-gray-500'}`}><Check size={14} /></div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${booking.canteenStatus === 'delivered' ? 'text-green-500' : 'text-gray-500'}`}>Delivered</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex flex-col items-center py-8 border-y border-white/5 relative mb-8">

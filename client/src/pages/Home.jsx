@@ -4,6 +4,7 @@ import FeaturedSection from '../components/FeaturedSection'
 import MoodFilter from '../components/MoodFilter'
 import RecentlyViewedCarousel from '../components/RecentlyViewedCarousel'
 import VibeQuiz from '../components/VibeQuiz'
+import DirectorsCut from '../components/DirectorsCut'
 import { getAllMovies } from '../services/movieService'
 import { Sparkles } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -47,6 +48,8 @@ const Home = () => {
       </div>
 
       <FeaturedSection selectedMood={selectedMood} movies={movies} />
+
+      <DirectorsCut />
 
       <RecentlyViewedCarousel />
 
