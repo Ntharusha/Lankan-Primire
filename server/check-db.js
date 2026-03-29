@@ -1,12 +1,23 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Movie = require('./models/Movie');
-require('dotenv').config();
 
 async function checkData() {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/lankan-premiere');
-    const movies = await Movie.find({}, 'title poster_path');
-    console.log(JSON.stringify(movies, null, 2));
-    process.exit(0);
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+
+        console.log("MongoDB Atlas Connected ✅");
+
+        const movies = await Movie.find({}, 'title poster_path');
+
+        console.log(JSON.stringify(movies, null, 2));
+
+    } catch (error) {
+        console.error("MongoDB Error ❌:", error);
+    } finally {
+        await mongoose.disconnect();
+        process.exit(0);
+    }
 }
 
 checkData();
