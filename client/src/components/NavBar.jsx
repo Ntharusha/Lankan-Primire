@@ -32,7 +32,6 @@ const NavBar = () => {
         const q = params.get('search')
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (q) setSearchQuery(q)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         else setSearchQuery('')
 
         return () => window.removeEventListener('scroll', handleScroll)
