@@ -18,8 +18,8 @@ export const AuthProvider = ({ children }) => {
                     console.log('✅ User loaded from token:', res);
                     console.log('👤 User role:', res?.role);
                     setUser(res);
-                } catch {
-                    console.log('❌ Failed to load user from token');
+                } catch (err) {
+                    console.error('❌ Failed to load user from token:', err.message);
                     localStorage.removeItem('token');
                     delete apiClient.defaults.headers.common['Authorization'];
                 }

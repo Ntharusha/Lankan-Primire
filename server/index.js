@@ -28,7 +28,7 @@ connectDB();
 // Middleware
 app.use(helmet()); 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: true, // This allows the origin of the request
   credentials: true
 }));
 app.use(express.json());

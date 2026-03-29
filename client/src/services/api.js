@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -27,6 +27,9 @@ apiClient.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
+    }
+    if (error.message === 'Network Error') {
+      error.message = 'Network Error: Cannot connect to the server. Please ensure the backend is running.';
     }
     return Promise.reject(error.response?.data || error)
   }
