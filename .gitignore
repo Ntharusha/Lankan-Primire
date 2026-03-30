@@ -1,3 +1,13 @@
 .env
 server/.env
 node_modules
+dist
+build
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lint-results*.json
+build_output.txt
+tmp/
