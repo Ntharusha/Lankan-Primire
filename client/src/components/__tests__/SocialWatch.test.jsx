@@ -15,7 +15,7 @@ describe('SeatMap Social Watch Parties Component', () => {
         ];
 
         // Since it's SVG, we check for text mapping in the component
-        const { container } = render(
+        render(
             <SeatMap 
                 seatGrid={mockSeatGrid} 
                 selectedSeats={[]} 
