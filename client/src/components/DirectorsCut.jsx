@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import { Sparkles, ChevronRight, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getRecommendations } from '../services/movieService';
-import { getPosterUrl, getBackdropUrl } from '../utils/movieUtils';
+import { getBackdropUrl } from '../utils/movieUtils';
 import { useAuth } from '../context/AuthContext';
 
 const DirectorsCut = () => {
     const { user } = useAuth();
     const [recommendations, setRecommendations] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
 
     useEffect(() => {
         if (!user) return;
