@@ -3,11 +3,13 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Only copy package.json first to cache layers
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
 
+# Pass backend URL at build time (e.g. for API calls)
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
@@ -16,11 +18,13 @@ RUN npm run build
 # ── Stage 2: Serve with Nginx ────────────────────────────────────
 FROM nginx:1.25-alpine
 
+# Clean default Nginx files
 RUN rm /etc/nginx/conf.d/default.conf
 
+# Copy build artifacts to Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Nginx config for React SPA (handles client-side routing)
+# Nginx configuration for React SPA (handles client-side routing and API proxy)
 RUN printf 'server {\n\
     listen 80;\n\
     server_name _;\n\
@@ -46,6 +50,7 @@ RUN printf 'server {\n\
 
 EXPOSE 80
 
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget -qO- http://localhost:80 || exit 1
 
