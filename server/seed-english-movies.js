@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Movie = require('./models/Movie');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const englishMovies = [
     {
