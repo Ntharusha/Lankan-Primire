@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Monitor, Check, Clock, Utensils, X, Loader2, Flame } from 'lucide-react';
+import { ChevronLeft, Check, Clock, Utensils, X, Loader2, Flame, Ticket } from 'lucide-react';
 import { useBookings } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import SeatMap from '../components/SeatMap';
 import CanteenMenu from '../components/CanteenMenu';
 import MockCheckoutForm from '../components/MockCheckoutForm';
+import TicketWallet from '../components/TicketWallet';
 import socket from '../services/socket';
 import { getShowById } from '../services/showService';
 import apiClient from '../services/api';
@@ -36,6 +37,10 @@ const SeatLayout = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [preparingPayment, setPreparingPayment] = useState(false);
+
+  // Post-payment ticket state
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [showTicketWallet, setShowTicketWallet] = useState(false);
   
   // Heatmap State
   const [heatmap, setHeatmap] = useState(null);
@@ -221,7 +226,7 @@ const SeatLayout = () => {
     }
   };
 
-  const handlePaymentSuccess = (paymentIntent) => {
+  const handlePaymentSuccess = async (paymentIntent) => {
     setIsPaymentModalOpen(false);
 
     // Create final booking
@@ -229,7 +234,7 @@ const SeatLayout = () => {
       user: {
         name: user?.name || 'Guest',
         email: user?.email || 'guest@example.com',
-        phone: paymentIntent.whatsappNumber || '' // WhatsApp number from form
+        phone: paymentIntent.whatsappNumber || ''
       },
       show: {
         movie: show.movie,
@@ -246,9 +251,25 @@ const SeatLayout = () => {
       paymentStatus: 'paid'
     };
 
-    addBooking(bookingData);
-    toast.success('Payment Successful! Booking Confirmed.', { duration: 5000 });
-    navigate('/my-bookings');
+    // Save booking and get the confirmed booking object back
+    const saved = await addBooking(bookingData);
+
+    // Build a display-ready booking object for TicketWallet
+    const displayBooking = {
+      ...(saved || bookingData),
+      show: {
+        ...(saved?.show || bookingData.show),
+        movie: show.movie,             // full movie object with poster/backdrop
+        theater: show.theater?.name || show.theater || 'Unknown Theater',
+        showDateTime: show.dateTime,
+      },
+      bookedSeats: selectedSeats,
+      canteenOrder: Object.values(canteenCart),
+    };
+
+    setConfirmedBooking(displayBooking);
+    setShowTicketWallet(true);
+    toast.success('🎬 Booking Confirmed! Your tickets are ready.', { duration: 4000 });
   };
 
   const formatTime = (seconds) => {
@@ -483,6 +504,43 @@ const SeatLayout = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Post-Payment QR Ticket Wallet */}
+      <AnimatePresence>
+        {showTicketWallet && confirmedBooking && (
+          <>
+            {/* Success celebration overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[115] pointer-events-none"
+            >
+              <div className="absolute inset-0 bg-primary/5" />
+              {/* Confetti-like particles */}
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 1, y: '100vh', x: `${Math.random() * 100}vw`, scale: 0 }}
+                  animate={{ opacity: 0, y: '-20vh', scale: 1, rotate: Math.random() * 360 }}
+                  transition={{ duration: 2 + Math.random(), delay: i * 0.1, ease: 'easeOut' }}
+                  className="absolute w-3 h-3 rounded-sm"
+                  style={{ background: i % 2 === 0 ? '#F84565' : '#fff', left: `${(i / 12) * 100}%`, bottom: 0 }}
+                />
+              ))}
+            </motion.div>
+
+            <TicketWallet
+              booking={confirmedBooking}
+              onClose={() => {
+                setShowTicketWallet(false);
+                setConfirmedBooking(null);
+                navigate('/my-bookings');
+              }}
+            />
+          </>
         )}
       </AnimatePresence>
     </div>

@@ -1,4 +1,4 @@
-wwwdconst mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const Booking = require('./server/models/Booking');
 const Movie = require('./server/models/Movie');
 require('dotenv').config({ path: './server/.env' });
