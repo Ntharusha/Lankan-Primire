@@ -1,0 +1,44 @@
+# ── Frontend Deployment ──────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lankan-primire-client
+  labels:
+    app: lankan-primire-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lankan-primire-client
+  template:
+    metadata:
+      labels:
+        app: lankan-primire-client
+    spec:
+      containers:
+        - name: client
+          image: ghost69/lankan-primire-client:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+# ── Frontend Service ─────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: lankan-primire-client-svc
+spec:
+  selector:
+    app: lankan-primire-client
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer

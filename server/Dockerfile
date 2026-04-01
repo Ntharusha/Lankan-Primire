@@ -1,16 +1,17 @@
-FROM node:18
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install only production dependencies first (better layer caching)
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
-# Copy the rest of the code
+# Copy app source
 COPY . .
 
-# Expose the API port
+# Don't copy local .env — inject via --env-file or -e at runtime
+RUN rm -f .env
+
 EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+CMD ["node", "index.js"]

@@ -1,0 +1,36 @@
+# ── Ingress (routes traffic: / → client, /api → server) ─────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lankan-primire-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Uncomment for TLS/SSL (cert-manager):
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: lankan-primire.example.com   # Replace with your domain
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: lankan-primire-server-svc
+                port:
+                  number: 5000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lankan-primire-client-svc
+                port:
+                  number: 80
+  # Uncomment for TLS:
+  # tls:
+  #   - hosts:
+  #       - lankan-primire.example.com
+  #     secretName: lankan-primire-tls
