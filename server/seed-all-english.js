@@ -3,7 +3,8 @@ const Movie = require('./models/Movie');
 const Theater = require('./models/Theater');
 const Show = require('./models/Show');
 const Booking = require('./models/Booking');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const englishMovies = [
     {
