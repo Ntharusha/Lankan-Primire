@@ -84,10 +84,10 @@ jobs:
         context: ./server
         push: true
         tags: |
-          ghost69/lankan-primire-server:latest
-          ghost69/lankan-primire-server:${{ github.sha }}
-        cache-from: type=registry,ref=ghost69/lankan-primire-server:buildcache
-        cache-to: type=registry,ref=ghost69/lankan-primire-server:buildcache,mode=max
+          ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
+          ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:buildcache,mode=max
 
     - name: Build and push Frontend Image
       uses: docker/build-push-action@v5
@@ -95,7 +95,7 @@ jobs:
         context: ./client
         push: true
         tags: |
-          ghost69/lankan-primire-client:latest
-          ghost69/lankan-primire-client:${{ github.sha }}
-        cache-from: type=registry,ref=ghost69/lankan-primire-client:buildcache
-        cache-to: type=registry,ref=ghost69/lankan-primire-client:buildcache,mode=max
+          ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
+          ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache,mode=max
