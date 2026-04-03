@@ -4,4 +4,4 @@
 key_pair_name      = "your-aws-key-pair-name"
 mongodb_uri        = "mongodb+srv://ghost69:YOUR_PASSWORD@cluster0.qofq3gf.mongodb.net/lankan-primire?retryWrites=true&w=majority"
 jwt_secret         = "your_super_secret_jwt_key_here"
-dockerhub_username = "ghost69"
+dockerhub_username = "tharusha69"
