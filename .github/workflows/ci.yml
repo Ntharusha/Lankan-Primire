@@ -102,3 +102,43 @@ jobs:
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:${{ github.sha }}
         cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache
         cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache,mode=max
+
+  deploy:
+    name: Deploy to EC2
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: SSH into EC2 and Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_IP }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # 1. Pull the newest images
+          docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
+          
+          # 2. Stop and remove existing containers (or fail silently if they don't exist)
+          docker stop server client || true
+          docker rm server client || true
+          
+          # 3. Start the Backend
+          docker run -d --name server \
+            -p 5000:5000 \
+            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            -e NODE_ENV=production \
+            --restart unless-stopped \
+            ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
+          
+          # 4. Start the Frontend
+          docker run -d --name client \
+            -p 3000:80 \
+            --restart unless-stopped \
+            ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
+          
+          # 5. Clean up old unused images
+          docker image prune -af
