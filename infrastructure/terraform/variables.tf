@@ -13,7 +13,7 @@ variable "ec2_ami" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro" # ✅ AWS Free Tier — 750 hrs/month for 12 months
+  default     = "t3.micro" # ✅ Newer AWS Free Tier eligible instance
 }
 
 variable "key_pair_name" {
