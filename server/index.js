@@ -105,6 +105,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// 🍿 TEMPORARY SEED ROUTE (Visit this in your browser to add movies!)
+app.get('/api/seed', async (req, res) => {
+  try {
+    const seedAtlas = require('./seed-atlas-logic'); // I'll create this file in a second
+    await seedAtlas();
+    res.json({ status: 'success', message: 'Movies seeded successfully!' });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
