@@ -110,18 +110,23 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
+    - name: Decode SSH Key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > id_rsa
+        chmod 600 id_rsa
+        
     - name: SSH into EC2 and Deploy
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_IP }}
         username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        key_path: id_rsa
         script: |
           # 1. Pull the newest images
           docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
           docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
           
-          # 2. Stop and remove existing containers (or fail silently if they don't exist)
+          # 2. Stop and remove existing containers
           docker stop server client || true
           docker rm server client || true
           
