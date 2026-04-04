@@ -1,5 +1,13 @@
-.env
+# Secrets and Keys
+*.pem
+*.csv
+.env*
 server/.env
+infrastructure/terraform/terraform.tfvars
+infrastructure/terraform/terraform.tfstate*
+infrastructure/terraform/.terraform/
+
+# Node/Build
 node_modules
 dist
 build
