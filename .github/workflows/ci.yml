@@ -145,5 +145,9 @@ jobs:
             --restart unless-stopped \
             ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
           
-          # 5. Clean up old unused images
+          # 5. Wait 10 seconds and check if backend is healthy
+          sleep 10
+          docker logs server
+          
+          # 6. Clean up old unused images
           docker image prune -af
