@@ -73,12 +73,16 @@ resource "aws_instance" "app" {
     systemctl enable --now docker
     usermod -aG docker ubuntu
 
+    # Create a network so frontend can talk to backend by name
+    docker network create lankan-net || true
+
     # Pull images from Docker Hub
     docker pull ${var.dockerhub_username}/lankan-primire-server:latest
     docker pull ${var.dockerhub_username}/lankan-primire-client:latest
 
     # Run backend
     docker run -d --name server \
+      --network lankan-net \
       -p 5000:5000 \
       -e MONGODB_URI="${var.mongodb_uri}" \
       -e JWT_SECRET="${var.jwt_secret}" \
@@ -88,6 +92,7 @@ resource "aws_instance" "app" {
 
     # Run frontend
     docker run -d --name client \
+      --network lankan-net \
       -p 3000:80 \
       --restart unless-stopped \
       ${var.dockerhub_username}/lankan-primire-client:latest
