@@ -9,5 +9,8 @@
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
     "dev": "npm run client & npm run server"
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.3.2"
   }
 }
