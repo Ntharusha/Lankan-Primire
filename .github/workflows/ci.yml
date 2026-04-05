@@ -112,7 +112,8 @@ jobs:
     steps:
     - name: Set SSH Key
       run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d > id_rsa
+        # Strips all whitespace and decodes, ignoring any garbage characters
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d -i > id_rsa || echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 --decode --ignore-garbage > id_rsa
         chmod 600 id_rsa
 
     - name: Deploy to EC2
