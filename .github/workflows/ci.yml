@@ -111,11 +111,12 @@ jobs:
     
     steps:
     - name: SSH into EC2 and Deploy
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_IP }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
         script: |
           # 0. Create network
           docker network create lankan-net || true
