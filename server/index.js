@@ -6,13 +6,14 @@ const http = require('http');
 const { Server } = require('socket.io');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose'); // 👈 Added missing import
 const connectDB = require('./config/db');
 
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  standardHeaders: true, 
+  standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
 });
@@ -37,7 +38,7 @@ const io = new Server(server, {
 connectDB();
 
 // Middleware
-app.use(helmet()); 
+app.use(helmet());
 app.use(cors({
   origin: true, // This allows the origin of the request
   credentials: true
@@ -112,7 +113,13 @@ setInterval(async () => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    database: dbStatus,
+    readyState: mongoose.connection.readyState // 1 = connected
+  });
 });
 
 // 🍿 TEMPORARY SEED ROUTE (Visit this in your browser to add movies!)
