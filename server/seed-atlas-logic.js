@@ -87,13 +87,18 @@ const seedAtlas = async () => {
         movie = await Movie.create(movieData);
       }
 
-      // Shows
+      // Create fresh shows for each movie that is currently showing
       if (movieData.isShowing) {
-        const showTime = new Date();
-        showTime.setHours(19, 0, 0, 0); 
+        // 1. Delete any old shows for this movie to start fresh
+        await Show.deleteMany({ movie: movie._id });
 
-        const existingShow = await Show.findOne({ movie: movie._id, theater: theater._id });
-        if (!existingShow) {
+        // 2. Create shows for the next 3 days at 7:00 PM
+        const days = [0, 1, 2]; // 0 = Today, 1 = Tomorrow, 2 = Next Day
+        for (const dayOffset of days) {
+          const showTime = new Date();
+          showTime.setDate(showTime.getDate() + dayOffset);
+          showTime.setHours(19, 0, 0, 0);
+
           await Show.create({
             movie: movie._id,
             theater: theater._id,
@@ -102,6 +107,7 @@ const seedAtlas = async () => {
             seatGrid: createSeatGrid()
           });
         }
+        console.log(`     🎟️  3 Future shows created for: ${movie.title}`);
       }
     }
     return true;
