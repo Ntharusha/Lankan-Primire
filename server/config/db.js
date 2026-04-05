@@ -8,16 +8,10 @@ const connectDB = async () => {
     }
     const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return true;
   } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    
-    // In production/deployment (EC2), we should probably exit if DB connection fails
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Exiting process due to DB connection failure in production.');
-      process.exit(1);
-    }
-    
-    console.error('Continuing in development mode with local fallback or in-memory storage simulation.');
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    return false;
   }
 };
 
