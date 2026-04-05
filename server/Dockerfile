@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
 # Install only production dependencies first (better layer caching)
 COPY package*.json ./
 RUN npm install --omit=dev
@@ -13,5 +16,8 @@ COPY . .
 RUN rm -f .env
 
 EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:5000/api/health || exit 1
 
 CMD ["node", "index.js"]

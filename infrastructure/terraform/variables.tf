@@ -38,3 +38,8 @@ variable "jwt_secret" {
   type        = string
   sensitive   = true
 }
+variable "allowed_ssh_ip" {
+  description = "Your public IP address for SSH access (CIDR format, e.g. 1.2.3.4/32)"
+  type        = string
+  default     = "0.0.0.0/0" # Default allows everyone, but user should change this!
+}
