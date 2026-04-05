@@ -49,3 +49,4 @@ npm install express-rate-limit
 - **Frontend**: `http://<EC2_IP>:3000`
 - **Backend Health**: `http://<EC2_IP>:5000/api/health`
 - **Docker Health Status**: SSH into the box and run `docker ps` to see "healthy" status.
+yifykfkufk
