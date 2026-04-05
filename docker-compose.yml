@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     env_file:
-      - ./server/.env    # Loads MONGODB_URI from your .env (Atlas connection string)
+      - ./server/.env # Loads MONGODB_URI from your .env (Atlas connection string)
 
   client:
     build: ./client
