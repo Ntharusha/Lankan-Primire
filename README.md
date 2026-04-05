@@ -27,6 +27,36 @@ This README outlines the **Application Features**, **API Architecture**, and **D
 
 ---
 
+## 📂 Project Structure
+
+```text
+lankan-primire/
+├── .github/workflows/     # CI/CD pipelines (GitHub Actions)
+├── client/                # React/Vite Frontend Application
+│   ├── public/            # Static client assets
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # View pages (Home, Movie, Booking, etc.)
+│   │   ├── services/      # Backend API communication triggers
+│   │   ├── context/       # React Context state management
+│   │   └── hooks/         # Custom React hooks
+│   ├── package.json       # Client dependencies
+│   └── Dockerfile         # Client container build instructions
+├── infrastructure/        # Infrastructure as code
+│   └── terraform/         # Terraform configurations targeting AWS
+├── server/                # Node.js/Express Backend Application
+│   ├── models/            # Mongoose schemas (Movie, Booking, Show, User)
+│   ├── routes/            # Express REST route controllers
+│   ├── services/          # Heavy business logic and WebSocket management
+│   ├── middleware/        # Custom Express middleware (e.g. auth validation)
+│   ├── package.json       # Server dependencies
+│   └── Dockerfile         # Server container build instructions
+├── docker-compose.yml     # Local multi-container setup (DB, Client, Server)
+└── README.md              # Project documentation (You are here!)
+```
+
+---
+
 ## 🔌 API Architecture & How It Works
 
 The backend provides a RESTful JSON API alongside a real-time WebSocket connection to handle high-concurrency tasks like seat selection.
