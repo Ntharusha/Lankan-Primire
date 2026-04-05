@@ -111,17 +111,19 @@ jobs:
     
     steps:
     - name: Set SSH Key
+      id: ssh_key
       run: |
-        # Strips all whitespace and decodes, ignoring any garbage characters
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d -i > id_rsa || echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 --decode --ignore-garbage > id_rsa
-        chmod 600 id_rsa
+        # Decode the key into a multi-line output variable
+        echo "key<<EOF" >> $GITHUB_OUTPUT
+        (echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d -i 2>/dev/null || echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 --decode --ignore-garbage 2>/dev/null) >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_IP }}
         username: ${{ secrets.EC2_USER }}
-        key_path: id_rsa
+        key: ${{ steps.ssh_key.outputs.key }}
         port: 22
         script: |
           # 0. Create network
