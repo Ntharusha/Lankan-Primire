@@ -8,6 +8,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose'); // 👈 Added missing import
 const connectDB = require('./config/db');
+const promBundle = require('express-prom-bundle');
+const promClient = require('prom-client');
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -36,6 +38,19 @@ const io = new Server(server, {
 
 // Connect to MongoDB
 connectDB();
+
+// Prometheus Metrics Middleware
+const metricsMiddleware = promBundle({
+  includeMethod: true, 
+  includePath: true,
+  includeStatusCode: true, 
+  includeUp: true,
+  customLabels: { project_name: 'lankan-premiere' },
+  promClient: {
+    collectDefaultMetrics: {}
+  }
+});
+app.use(metricsMiddleware);
 
 // Middleware
 app.use(helmet());
