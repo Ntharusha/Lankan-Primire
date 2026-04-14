@@ -21,7 +21,9 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3",
     "stripe": "^20.3.1",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "express-prom-bundle": "^8.0.0",
+    "prom-client": "^15.1.0"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
