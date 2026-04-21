@@ -2,14 +2,18 @@
 
 services:
   server:
-    build: ./server
+    build:
+      context: ./server
+      network: host
     ports:
       - "5000:5000"
     env_file:
       - ./server/.env # Loads MONGODB_URI from your .env (Atlas connection string)
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      network: host
     ports:
       - "3000:3000"
     depends_on:
@@ -35,5 +39,7 @@ services:
       - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
