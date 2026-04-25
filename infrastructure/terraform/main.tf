@@ -102,7 +102,9 @@ resource "aws_instance" "app" {
     mkdir -p /home/ubuntu/app/prometheus
     mkdir -p /home/ubuntu/app/grafana/provisioning/datasources
     mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
-    chown -R ubuntu:ubuntu /home/ubuntu/app
+    
+    # Fix permissions for monitoring tools
+    chmod -R 777 /home/ubuntu/app
 
     # Prometheus Config
     cat <<'PROMETHEUS_EOF' > /home/ubuntu/app/prometheus/prometheus.yml
@@ -170,16 +172,18 @@ services:
       - server
 
   prometheus:
-    image: quay.io/prometheus/prometheus:latest
+    image: prom/prometheus:v2.51.1
     restart: unless-stopped
+    user: root
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana:10.4.2
+    image: grafana/grafana-oss:10.4.2
     restart: unless-stopped
+    user: root
     ports:
       - "3001:3000"
     environment:
