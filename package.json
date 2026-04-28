@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "express-rate-limit": "^8.3.2"
+  },
+  "devDependencies": {
+    "vercel": "^52.0.0"
   }
 }
