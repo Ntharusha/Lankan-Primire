@@ -1,30 +1,21 @@
-
-
 services:
   server:
     build:
       context: ./server
-      network: host
     ports:
       - "5000:5000"
     env_file:
-      - ./server/.env # Loads MONGODB_URI from your .env (Atlas connection string)
+      - ./server/.env
+    restart: unless-stopped
 
-  client:
-    build:
-      context: ./client
-      network: host
-    ports:
-      - "3000:3000"
-    depends_on:
-      - server
+  # Cloudflare Tunnel to provide HTTPS for your backend
+  # You will need to provide your TUNNEL_TOKEN in the .env file
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
     environment:
-      - VITE_API_URL=http://localhost:5000/api
-
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27018:27017"
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
 
   prometheus:
     image: quay.io/prometheus/prometheus:latest
@@ -32,6 +23,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:10.4.2
@@ -43,3 +35,4 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
+    restart: unless-stopped
