@@ -110,6 +110,12 @@ If the CI phase passes successfully, GitHub Actions orchestrates the application
 - Leverages Docker run configurations with proper environment variable seeding (e.g., `MONGODB_URI`, `JWT_SECRET`).
 - Evaluates container health for stability and automatically prunes old unused images to save block storage space.
 
+### 5. Frontend Deployment (Vercel)
+For the best performance and developer experience, the React frontend can be deployed directly on **Vercel**:
+- **Automatic Builds**: Vercel detects the `client/` directory and `vite` framework automatically via the root `vercel.json`.
+- **Environment Variables**: Configure `VITE_API_URL` and `VITE_API_BASE_URL` in the Vercel dashboard to point to your backend (e.g., your AWS EC2 IP).
+- **Global Edge Network**: Ensures the UI is delivered instantly to users worldwide.
+
 ---
 
 ## 💻 Local Development Setup
