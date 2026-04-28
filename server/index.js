@@ -1,5 +1,8 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+const envPath = process.env.NODE_ENV === 'production' 
+  ? path.join(__dirname, '.env.production') 
+  : path.join(__dirname, '.env');
+require('dotenv').config({ path: envPath });
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -53,9 +56,33 @@ const metricsMiddleware = promBundle({
 app.use(metricsMiddleware);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for easier development/deployment if needed, or configure properly
+}));
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  /\.vercel\.app$/ // Allow all vercel subdomains
+].filter(Boolean);
+
 app.use(cors({
-  origin: true, // This allows the origin of the request
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return allowed === origin;
+    });
+
+    if (isAllowed || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
