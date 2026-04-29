@@ -116,11 +116,13 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # Create app directory if not exists
-          mkdir -p /home/ubuntu/app
+          # Setup directories
+          mkdir -p /home/ubuntu/app/prometheus
+          mkdir -p /home/ubuntu/app/grafana/provisioning/datasources
+          mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
           cd /home/ubuntu/app
 
-          # Create the Docker Compose file dynamically
+          # Create Docker Compose file
           cat <<EOF > docker-compose.yml
           services:
             server:
@@ -153,7 +155,7 @@ jobs:
               ports:
                 - "9090:9090"
               volumes:
-                - ./prometheus.yml:/etc/prometheus/prometheus.yml
+                - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
             grafana:
               image: grafana/grafana-oss:10.4.2
@@ -162,8 +164,11 @@ jobs:
                 - lankan-net
               ports:
                 - "3001:3000"
+              user: root
               environment:
                 - GF_SECURITY_ADMIN_PASSWORD=admin
+              volumes:
+                - ./grafana/provisioning:/etc/grafana/provisioning
               depends_on:
                 - prometheus
 
@@ -172,9 +177,8 @@ jobs:
               driver: bridge
           EOF
 
-          # Create a basic prometheus config if it doesn't exist
-          if [ ! -f prometheus.yml ]; then
-            cat <<EOF > prometheus.yml
+          # Create Prometheus config
+          cat <<EOF > prometheus/prometheus.yml
           global:
             scrape_interval: 15s
           scrape_configs:
@@ -183,11 +187,31 @@ jobs:
               static_configs:
                 - targets: ['server:5000']
           EOF
-          fi
 
-          # Pull and Restart the whole stack
-          docker compose pull
-          docker compose up -d --remove-orphans
-          
-          # Clean up
-          docker image prune -f
+          # Create Grafana Datasource (Connects Prometheus)
+          cat <<EOF > grafana/provisioning/datasources/prometheus.yml
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus:9090
+              access: proxy
+              isDefault: true
+          EOF
+
+          # Create Grafana Dashboard Provider
+          cat <<EOF > grafana/provisioning/dashboards/provider.yml
+          apiVersion: 1
+          providers:
+            - name: 'App Dashboards'
+              orgId: 1
+              folder: ''
+              type: file
+              options:
+                path: /etc/grafana/provisioning/dashboards
+          EOF
+
+          # Restart everything
+          sudo docker-compose pull
+          sudo docker-compose up -d --remove-orphans
+          sudo docker image prune -f
