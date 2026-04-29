@@ -126,9 +126,13 @@ jobs:
           mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
           cd /home/ubuntu/app
 
-          # Create Docker Compose file safely
-          # We use 'EOF' (quoted) to prevent shell variable expansion of our secrets
-          cat <<'EOF' > docker-compose.yml
+          # Create .env file securely to prevent shell mangling
+          printf "MONGODB_URI=%s\n" "$MONGODB_URI" > .env
+          printf "JWT_SECRET=%s\n" "$JWT_SECRET" >> .env
+          printf "NODE_ENV=production\n" >> .env
+
+          # Create Docker Compose file
+          cat <<EOF > docker-compose.yml
           services:
             server:
               image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
@@ -137,10 +141,7 @@ jobs:
                 - lankan-net
               ports:
                 - "5000:5000"
-              environment:
-                - MONGODB_URI=${MONGODB_URI}
-                - JWT_SECRET=${JWT_SECRET}
-                - NODE_ENV=production
+              env_file: .env
 
             client:
               image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
