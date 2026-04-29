@@ -21,3 +21,5 @@ yarn-error.log*
 lint-results*.json
 build_output.txt
 tmp/
+.vercel
+.env*.local
