@@ -91,8 +91,6 @@ jobs:
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:${{ github.sha }}
-        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:buildcache
-        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:buildcache,mode=max
 
     - name: Build and push Frontend Image
       uses: docker/build-push-action@v5
@@ -102,8 +100,6 @@ jobs:
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:${{ github.sha }}
-        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache
-        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:buildcache,mode=max
 
   deploy:
     name: Deploy to EC2
@@ -120,37 +116,78 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # 0. Create network
-          docker network create lankan-net || true
+          # Create app directory if not exists
+          mkdir -p /home/ubuntu/app
+          cd /home/ubuntu/app
+
+          # Create the Docker Compose file dynamically
+          cat <<EOF > docker-compose.yml
+          services:
+            server:
+              image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
+              restart: unless-stopped
+              networks:
+                - lankan-net
+              ports:
+                - "5000:5000"
+              environment:
+                - MONGODB_URI="${{ secrets.MONGODB_URI }}"
+                - JWT_SECRET="${{ secrets.JWT_SECRET }}"
+                - NODE_ENV=production
+
+            client:
+              image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
+              restart: unless-stopped
+              networks:
+                - lankan-net
+              ports:
+                - "3000:80"
+              depends_on:
+                - server
+
+            prometheus:
+              image: prom/prometheus:v2.51.1
+              restart: unless-stopped
+              networks:
+                - lankan-net
+              ports:
+                - "9090:9090"
+              volumes:
+                - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+            grafana:
+              image: grafana/grafana-oss:10.4.2
+              restart: unless-stopped
+              networks:
+                - lankan-net
+              ports:
+                - "3001:3000"
+              environment:
+                - GF_SECURITY_ADMIN_PASSWORD=admin
+              depends_on:
+                - prometheus
+
+          networks:
+            lankan-net:
+              driver: bridge
+          EOF
+
+          # Create a basic prometheus config if it doesn't exist
+          if [ ! -f prometheus.yml ]; then
+            cat <<EOF > prometheus.yml
+          global:
+            scrape_interval: 15s
+          scrape_configs:
+            - job_name: 'api'
+              metrics_path: '/metrics'
+              static_configs:
+                - targets: ['server:5000']
+          EOF
+          fi
+
+          # Pull and Restart the whole stack
+          docker compose pull
+          docker compose up -d --remove-orphans
           
-          # 1. Pull the newest images
-          docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
-          
-          # 2. Stop and remove existing containers
-          docker stop server client || true
-          docker rm server client || true
-          
-          # 3. Start the Backend
-          docker run -d --name server \
-            --network lankan-net \
-            -p 5000:5000 \
-            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
-            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            -e NODE_ENV=production \
-            --restart unless-stopped \
-            ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
-          
-          # 4. Start the Frontend
-          docker run -d --name client \
-            --network lankan-net \
-            -p 3000:80 \
-            --restart unless-stopped \
-            ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
-          
-          # 5. Wait 10 seconds and check if backend is healthy
-          sleep 10
-          docker logs server
-          
-          # 6. Clean up old unused images
-          docker image prune -af
+          # Clean up
+          docker image prune -f
