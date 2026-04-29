@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+lint-results*.json
+build_output.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
