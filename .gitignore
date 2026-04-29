@@ -3,9 +3,11 @@
 *.csv
 .env*
 server/.env
+client/.env
 infrastructure/terraform/terraform.tfvars
 infrastructure/terraform/terraform.tfstate*
 infrastructure/terraform/.terraform/
+
 
 # Node/Build
 node_modules
