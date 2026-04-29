@@ -110,16 +110,15 @@ jobs:
     steps:
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
       with:
         host: ${{ secrets.EC2_IP }}
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         envs: MONGODB_URI,JWT_SECRET
-      env:
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      with:
         script: |
           # Setup directories
           mkdir -p /home/ubuntu/app/prometheus
