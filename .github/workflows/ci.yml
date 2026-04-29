@@ -110,11 +110,15 @@ jobs:
     steps:
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
       with:
         host: ${{ secrets.EC2_IP }}
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
+        envs: MONGODB_URI,JWT_SECRET
         script: |
           # Setup directories
           mkdir -p /home/ubuntu/app/prometheus
@@ -122,8 +126,9 @@ jobs:
           mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
           cd /home/ubuntu/app
 
-          # Create Docker Compose file
-          cat <<EOF > docker-compose.yml
+          # Create Docker Compose file safely
+          # We use 'EOF' (quoted) to prevent shell variable expansion of our secrets
+          cat <<'EOF' > docker-compose.yml
           services:
             server:
               image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
@@ -133,8 +138,8 @@ jobs:
               ports:
                 - "5000:5000"
               environment:
-                - MONGODB_URI="${{ secrets.MONGODB_URI }}"
-                - JWT_SECRET="${{ secrets.JWT_SECRET }}"
+                - MONGODB_URI=${MONGODB_URI}
+                - JWT_SECRET=${JWT_SECRET}
                 - NODE_ENV=production
 
             client:
@@ -188,7 +193,7 @@ jobs:
                 - targets: ['server:5000']
           EOF
 
-          # Create Grafana Datasource (Connects Prometheus)
+          # Create Grafana Datasource
           cat <<EOF > grafana/provisioning/datasources/prometheus.yml
           apiVersion: 1
           datasources:
@@ -212,6 +217,6 @@ jobs:
           EOF
 
           # Restart everything
-          sudo docker-compose pull
-          sudo docker-compose up -d --remove-orphans
+          sudo docker compose pull
+          sudo docker compose up -d --remove-orphans
           sudo docker image prune -f
