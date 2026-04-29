@@ -178,7 +178,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Get dashboard stats (admin)
-router.get('/stats/dashboard', auth, async (req, res) => {
+router.get('/stats/dashboard', auth, admin, async (req, res) => {
   try {
     const totalBookings = await Booking.countDocuments();
     const totalRevenue = await Booking.aggregate([
@@ -188,7 +188,7 @@ router.get('/stats/dashboard', auth, async (req, res) => {
 
     // Active shows means unique movies currently scheduled
     const activeShowsCount = await Show.distinct('movie').then(movies => movies.length);
-    const totalUsers = await require('../models/User').countDocuments();
+    const totalUsers = await User.countDocuments();
 
     const recentBookings = await Booking.find()
       .populate('show.movie')
