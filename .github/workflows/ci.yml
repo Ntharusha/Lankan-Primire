@@ -172,6 +172,7 @@ jobs:
               user: root
               environment:
                 - GF_SECURITY_ADMIN_PASSWORD=admin
+                - GF_ANGULAR_SUPPORT_ENABLED=true
               volumes:
                 - ./grafana/provisioning:/etc/grafana/provisioning
               depends_on:
