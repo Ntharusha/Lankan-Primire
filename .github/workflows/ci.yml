@@ -112,17 +112,12 @@ jobs:
     if: github.event_name == 'push'
     
     steps:
-    - name: Set SSH Key
-      run: |
-        (echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d -i 2>/dev/null || echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 --decode --ignore-garbage 2>/dev/null) > id_rsa_deploy
-        chmod 600 id_rsa_deploy
-
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_IP }}
         username: ubuntu
-        key_path: id_rsa_deploy
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
           # 0. Create network
