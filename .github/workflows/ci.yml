@@ -219,6 +219,42 @@ jobs:
                 path: /etc/grafana/provisioning/dashboards
           EOF
 
+          # Create a Basic Express Dashboard JSON
+          cat <<EOF > grafana/provisioning/dashboards/express_dashboard.json
+          {
+            "annotations": { "list": [] },
+            "editable": true,
+            "fiscalYearStartMonth": 0,
+            "graphTooltip": 0,
+            "links": [],
+            "liveNow": false,
+            "panels": [
+              {
+                "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+                "id": 1,
+                "title": "API Request Rate",
+                "type": "timeseries",
+                "targets": [
+                  { "expr": "rate(http_request_duration_seconds_count[1m])", "legendFormat": "{{path}}" }
+                ]
+              },
+              {
+                "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+                "id": 2,
+                "title": "API Response Time (95th Percentile)",
+                "type": "timeseries",
+                "targets": [
+                  { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95 Response Time" }
+                ]
+              }
+            ],
+            "schemaVersion": 39,
+            "title": "Lankan Primire Overview",
+            "uid": "lankan-overview",
+            "version": 1
+          }
+          EOF
+
           # Restart everything
           sudo docker compose pull
           sudo docker compose up -d --remove-orphans
