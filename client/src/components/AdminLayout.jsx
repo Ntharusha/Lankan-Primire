@@ -50,7 +50,7 @@ const AdminLayout = () => {
               <span className="text-white font-black text-xl">L</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-xl tracking-tighter text-white uppercase italic leading-none">Lankan <span className="text-primary">HQ</span></span>
+              <span className="font-black text-xl tracking-tighter text-white uppercase italic leading-none">Lankan <span className="text-primary">Admin</span></span>
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">Command Center</span>
             </div>
           </Link>
