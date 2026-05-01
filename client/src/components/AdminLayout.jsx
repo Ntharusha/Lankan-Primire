@@ -50,7 +50,7 @@ const AdminLayout = () => {
               <span className="text-white font-black text-xl">L</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-xl tracking-tighter text-white uppercase italic leading-none">Lankan <span className="text-primary">Admin</span></span>
+              <span className="font-black text-xl tracking-tighter text-white uppercase italic leading-none">Lankan <span className="text-primary">HQ</span></span>
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">Command Center</span>
             </div>
           </Link>
@@ -106,7 +106,7 @@ const AdminLayout = () => {
 
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 glass-card rounded-2xl border-white/5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Online</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">System Online</span>
           </div>
 
           <div className="flex items-center gap-4">
