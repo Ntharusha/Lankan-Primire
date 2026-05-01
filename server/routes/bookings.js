@@ -127,9 +127,11 @@ router.post('/', auth, async (req, res) => {
           await showDoc.save();
           
           // Emit seat_unlocked (or seat_booked) to others so they see it's unavailable
-          bookedSeats.forEach(seatNumber => {
-            req.io.to(showId).emit('seat_unlocked', { showId, seatNumber });
-          });
+          if (req.io) {
+            bookedSeats.forEach(seatNumber => {
+              req.io.to(showId).emit('seat_unlocked', { showId, seatNumber });
+            });
+          }
 
           console.log(`Updated Show ${showId} seats: ${bookedSeats.join(', ')}`);
         }
