@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Star, MessageSquare, Trash2, Send, User } from 'lucide-react'
 import apiClient from '../services/api'
 import { useAuth } from '../context/AuthContext'

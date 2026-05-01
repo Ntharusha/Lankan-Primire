@@ -192,7 +192,6 @@ router.get('/stats/dashboard', auth, admin, async (req, res) => {
 
     const recentBookings = await Booking.find()
       .populate('show.movie')
-      .populate('user', 'name email')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -329,4 +328,3 @@ router.post('/split/:id/pay', async (req, res) => {
 });
 
 module.exports = router;
-

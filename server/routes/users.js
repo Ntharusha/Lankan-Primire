@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { auth, admin } = require('../middleware/auth');
 
 // Register User
 router.post('/register', async (req, res) => {
@@ -85,23 +86,9 @@ router.post('/login', async (req, res) => {
 });
 
 // Get User Data
-router.get('/me', async (req, res) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        if (!token) {
-            return res.status(401).json({ message: 'No token, authorization denied' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.user.id).select('-password');
-        res.json(user);
-    } catch (err) {
-        console.error(err.message);
-        res.status(401).json({ message: 'Token is not valid' });
-    }
+router.get('/me', auth, async (req, res) => {
+    res.json(req.user);
 });
-
-const { auth, admin } = require('../middleware/auth');
 
 // Get all users (admin only)
 router.get('/', auth, admin, async (req, res) => {
