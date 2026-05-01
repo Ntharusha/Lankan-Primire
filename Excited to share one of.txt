@@ -1,0 +1,37 @@
+🚀 Excited to share one of my recent projects: **Lankan Primire** 🎬
+*A Production-Ready Cinema Management & DevOps Showcase*
+
+This project is more than just a movie ticket booking system — it was built to demonstrate how modern software engineering and DevOps practices can create scalable, automated, and reliable production systems.
+
+🔹 **Tech Stack & Architecture**
+🌐 Frontend: React.js deployed on Vercel
+⚙️ Backend: Express.js + Node.js running in Docker on Amazon Web Services EC2
+🗄️ Database: MongoDB Atlas
+🔗 Reverse Proxy: Vercel Rewrites for seamless API communication
+
+🔹 **DevOps Highlights**
+✅ **Terraform** for Infrastructure as Code (EC2, VPC, Security Groups)
+✅ **GitHub Actions** CI/CD pipeline for testing, building, and deployment
+✅ **Docker Compose** for multi-service orchestration
+✅ Automated remote deployment via SSH
+
+🔹 **Monitoring & Observability**
+📊 Prometheus for metrics collection
+📈 Grafana Labs / Grafana dashboards for:
+• API latency & requests
+• CPU / RAM utilization
+• Container resource monitoring
+
+🔹 **Security Features**
+🔐 JWT Authentication
+🔐 GitHub Secrets for sensitive credentials
+🔐 Role-Based Access Control (RBAC)
+🔐 Dedicated SSH key deployment access
+
+💡 This project helped me gain practical experience in:
+#DevOps #CloudComputing #Docker #Terraform #CI_CD #Monitoring #AWS #ReactJS #NodeJS #MongoDB
+
+I’m continuously learning and building real-world systems to grow as a DevOps / Cloud Engineer. Feedback is always welcome!
+
+#OpenToWork #SoftwareEngineering #GitHub #Linux #Automation
+
