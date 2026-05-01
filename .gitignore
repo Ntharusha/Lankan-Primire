@@ -1,25 +1,33 @@
 # Secrets and Keys
 *.pem
 *.csv
-.env*
+.env
+.env.*
+!.env.example
 server/.env
 client/.env
 infrastructure/terraform/terraform.tfvars
 infrastructure/terraform/terraform.tfstate*
 infrastructure/terraform/.terraform/
 
-
 # Node/Build
-node_modules
-dist
-build
+**/node_modules/
+dist/
+build/
 .DS_Store
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Build artifacts
 lint-results*.json
 build_output.txt
 tmp/
+
+# Deployment
 .vercel
-.env*.local
+.netlify
+
+# Coverage
+coverage/
