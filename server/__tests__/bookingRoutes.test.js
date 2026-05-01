@@ -14,6 +14,7 @@ app.use(express.json());
 // Mock IO and Auth middleware simulation
 app.use((req, res, next) => {
     req.io = {
+        emit: jest.fn(),
         to: jest.fn().mockReturnValue({
             emit: jest.fn()
         })
