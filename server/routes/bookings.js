@@ -25,7 +25,7 @@ router.get('/', auth, admin, async (req, res) => {
 // Get current user's bookings
 router.get('/my', auth, async (req, res) => {
   try {
-    const userEmail = req.user?.email;
+    const userEmail = req.user?.email?.toLowerCase();
     if (!userEmail) return res.status(401).json({ message: 'Unauthorized' });
     const bookings = await Booking.find({ 'user.email': userEmail })
       .populate('show.movie')
@@ -58,6 +58,11 @@ router.get('/date/:date', auth, async (req, res) => {
 // Create booking (authenticated)
 router.post('/', auth, async (req, res) => {
   try {
+    // Normalize user email if present
+    if (req.body.user && req.body.user.email) {
+      req.body.user.email = req.body.user.email.toLowerCase();
+    }
+
     // 0. Check for existing booking with same paymentIntentId to prevent double bookings (idempotency)
     if (req.body.paymentIntentId) {
       const existing = await Booking.findOne({ paymentIntentId: req.body.paymentIntentId });
@@ -140,6 +145,9 @@ router.post('/', auth, async (req, res) => {
       }
     }
 
+    // Notify admins of the new booking for live dashboard updates
+    req.io.emit('booking_completed', populated);
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -217,13 +225,16 @@ router.post('/split', auth, async (req, res) => {
     // Create friends list with pending status
     const friendsList = friends.map(f => ({
       name: f.name,
-      email: f.email,
+      email: f.email?.toLowerCase(),
       amount: amount / (friends.length + 1),
       isPaid: false
     }));
 
     const booking = new Booking({
-      user,
+      user: {
+        ...user,
+        email: user.email?.toLowerCase()
+      },
       show,
       bookedSeats,
       amount,
@@ -233,7 +244,7 @@ router.post('/split', auth, async (req, res) => {
         isSplit: true,
         primaryUser: {
           name: user.name,
-          email: user.email,
+          email: user.email?.toLowerCase(),
           amount: amount / (friends.length + 1),
           isPaid: false
         },
@@ -258,7 +269,7 @@ router.post('/split', auth, async (req, res) => {
 // 2. Pay share (simulated for a specific user/friend by email)
 router.post('/split/:id/pay', async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = req.body.email?.toLowerCase();
     const booking = await Booking.findById(req.params.id);
 
     if (!booking || !booking.splitPayment.isSplit) {
@@ -318,6 +329,8 @@ router.post('/split/:id/pay', async (req, res) => {
       } catch (err) {
         console.error("Failed to award split loyalty points:", err);
       }
+      // Notify admins of the completed split booking
+      req.io.emit('booking_completed', booking);
     }
 
     await booking.save();
