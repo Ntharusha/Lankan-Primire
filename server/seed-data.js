@@ -27,7 +27,7 @@ const seedData = async () => {
         if (!movie) {
             movie = await Movie.create({
                 title: 'Interstellar',
-                titleSinhala: 'Interstellar',
+                titleSinhala: '',
                 titleTamil: 'Interstellar',
                 overview: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
                 poster_path: '/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
