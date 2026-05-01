@@ -7,7 +7,7 @@ const { auth, admin } = require('../middleware/auth');
 // AI Recommendations: "The Director's Cut"
 router.get('/recommendations', auth, async (req, res) => {
   try {
-    const userEmail = req.user?.email;
+    const userEmail = req.user?.email?.toLowerCase();
     if (!userEmail) return res.status(401).json({ message: 'Unauthorized' });
 
     // 1. Get user's past bookings to find preferences
@@ -142,4 +142,3 @@ router.delete('/:id', auth, admin, async (req, res) => {
 });
 
 module.exports = router;
-
