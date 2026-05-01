@@ -106,7 +106,7 @@ const AdminLayout = () => {
 
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 glass-card rounded-2xl border-white/5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">System Online</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Online</span>
           </div>
 
           <div className="flex items-center gap-4">
