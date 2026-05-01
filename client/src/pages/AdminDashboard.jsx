@@ -40,15 +40,19 @@ const AdminDashboard = () => {
         setRecentBookings(data.recentBookings || [])
       } catch (error) {
         console.error('Failed to fetch dashboard stats', error)
-        // Fallback removed for cleaner logic
       } finally {
         setLoading(false)
       }
     }
     fetchStats()
 
+    socket.on('connect', () => {
+      console.log('✅ Admin Command Center Connected to Live Feed');
+    });
+
     // Real-time updates
     socket.on('booking_completed', (data) => {
+      console.log('💰 LIVE TRANSACTION RECEIVED:', data);
       toast.success(`New booking received: #${data._id.slice(-6)}`, {
         icon: '💰',
         style: {
@@ -62,6 +66,7 @@ const AdminDashboard = () => {
 
     return () => {
       socket.off('booking_completed');
+      socket.off('connect');
     }
   }, [])
 

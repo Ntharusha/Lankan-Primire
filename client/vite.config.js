@@ -11,6 +11,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5001',
+        ws: true,
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

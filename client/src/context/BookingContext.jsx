@@ -25,7 +25,8 @@ export const BookingProvider = ({ children }) => {
   const fetchBookings = async () => {
     const token = localStorage.getItem('token')
     if (!token) {
-      setBookings([])
+      // If not logged in, only keep local guest bookings (BK...)
+      setBookings(prev => prev.filter(b => b._id && b._id.toString().startsWith('BK')))
       return
     }
     try {
@@ -34,22 +35,18 @@ export const BookingProvider = ({ children }) => {
       
       // Merge remote and local (guest) bookings, prioritising server versions
       setBookings(prev => {
-        const guestOnes = prev.filter(b => b._id.toString().startsWith('BK'))
+        const guestOnes = prev.filter(b => b._id && b._id.toString().startsWith('BK'))
         return [...remoteBookings, ...guestOnes]
       })
     } catch (error) {
       console.error('Failed to fetch bookings from server', error)
-      // Keep existing (possibly guest) bookings if fetch fails
     }
   }
 
   const { user } = useAuth()
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBookings()
-    // Re-fetch whenever the logged-in user changes (login / logout)
-     
   }, [user])
 
   useEffect(() => {
@@ -86,12 +83,9 @@ export const BookingProvider = ({ children }) => {
       setTimeout(async () => {
         try {
           const saved = await apiClient.post('/bookings', payload)
-          // Replace the local fallback booking with the server-saved booking
           setBookings(prev => prev.map(b => (b._id === newBooking._id ? saved : b)))
           toast.success('Booking synced to server')
-          console.log('Retried booking synced to server', saved)
         } catch (err) {
-          // keep failing silently; will be retried next session on fetch
           console.warn('Background retry to sync booking failed', err)
         }
       }, 10000)
@@ -104,18 +98,21 @@ export const BookingProvider = ({ children }) => {
     try {
       await apiClient.delete(`/bookings/${bookingId}`)
     } catch (error) {
-      // If server delete fails, still remove locally so UX is responsive
       console.warn('Server delete failed, removing locally only', error)
     }
     setBookings(prev => prev.filter(b => b._id !== bookingId))
     toast.success('Booking removed successfully')
   }
 
-  const now = new Date()
-  const getUpcomingBookings = () =>
-    bookings.filter(b => b.isPaid && new Date(b.show?.showDateTime) >= now)
-  const getPastBookings = () =>
-    bookings.filter(b => !b.isPaid || new Date(b.show?.showDateTime) < now)
+  const getUpcomingBookings = () => {
+    const now = new Date()
+    return bookings.filter(b => b.isPaid && new Date(b.show?.showDateTime) >= now)
+  }
+  
+  const getPastBookings = () => {
+    const now = new Date()
+    return bookings.filter(b => !b.isPaid || new Date(b.show?.showDateTime) < now)
+  }
 
   return (
     <BookingContext.Provider value={{
@@ -123,10 +120,10 @@ export const BookingProvider = ({ children }) => {
       addBooking,
       removeBooking,
       getUpcomingBookings,
-      getPastBookings
+      getPastBookings,
+      refreshBookings: fetchBookings
     }}>
       {children}
     </BookingContext.Provider>
   )
 }
-
