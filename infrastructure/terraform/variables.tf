@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "ap-south-1" # Mumbai — closest to Sri Lanka
+  default     = "ap-south-1" 
 }
 
 variable "ec2_ami" {
@@ -13,7 +13,7 @@ variable "ec2_ami" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro" # ✅ Newer AWS Free Tier eligible instance
+  default     = "t3.micro" 
 }
 
 variable "key_pair_name" {
@@ -41,5 +41,5 @@ variable "jwt_secret" {
 variable "allowed_ssh_ip" {
   description = "Your public IP address for SSH access (CIDR format, e.g. 1.2.3.4/32)"
   type        = string
-  default     = "0.0.0.0/0" # Default allows everyone, but user should change this!
+  default     = "0.0.0.0/0" 
 }
