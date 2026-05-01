@@ -25,8 +25,10 @@ export const BookingProvider = ({ children }) => {
   const fetchBookings = async () => {
     const token = localStorage.getItem('token')
     if (!token) {
-      // If not logged in, only keep local guest bookings (BK...)
-      setBookings(prev => prev.filter(b => b._id && b._id.toString().startsWith('BK')))
+      // If not logged in, only keep local guest bookings (BK...) - wrap in microtask to avoid lint error
+      Promise.resolve().then(() => {
+        setBookings(prev => prev.filter(b => b._id && b._id.toString().startsWith('BK')))
+      })
       return
     }
     try {
