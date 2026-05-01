@@ -146,7 +146,9 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Notify admins of the new booking for live dashboard updates
-    req.io.emit('booking_completed', populated);
+    if (req.io) {
+      req.io.emit('booking_completed', populated);
+    }
 
     res.status(201).json(populated);
   } catch (error) {
@@ -330,7 +332,9 @@ router.post('/split/:id/pay', async (req, res) => {
         console.error("Failed to award split loyalty points:", err);
       }
       // Notify admins of the completed split booking
-      req.io.emit('booking_completed', booking);
+      if (req.io) {
+        req.io.emit('booking_completed', booking);
+      }
     }
 
     await booking.save();
