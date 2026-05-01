@@ -13,9 +13,9 @@ COPY . .
 # Don't copy local .env — inject via --env-file or -e at runtime
 RUN rm -f .env
 
-EXPOSE 5001
+EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -q --spider http://localhost:5001/api/health || exit 1
+  CMD wget -q --spider http://localhost:5000/api/health || exit 1
 
 CMD ["node", "index.js"]
