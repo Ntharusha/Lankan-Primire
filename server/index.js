@@ -29,6 +29,7 @@ const bookingRoutes = require('./routes/bookings');
 const showRoutes = require('./routes/shows');
 const userRoutes = require('./routes/users');
 const { lockSeat, unlockSeat, unlockAllUserSeats, releaseExpiredLocks } = require('./services/showService');
+const { auth, admin } = require('./middleware/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -165,9 +166,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // 🍿 TEMPORARY SEED ROUTE (Visit this in your browser to add movies!)
-app.get('/api/seed', async (req, res) => {
+app.get('/api/seed', auth, admin, async (req, res) => {
   try {
-    const seedAtlas = require('./seed-atlas-logic'); // I'll create this file in a second
+    const seedAtlas = require('./seed-atlas-logic');
     await seedAtlas();
     res.json({ status: 'success', message: 'Movies seeded successfully!' });
   } catch (error) {
