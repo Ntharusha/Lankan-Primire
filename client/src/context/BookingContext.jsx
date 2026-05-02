@@ -48,6 +48,7 @@ export const BookingProvider = ({ children }) => {
   const { user } = useAuth()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
     fetchBookings()
   }, [user])
 
