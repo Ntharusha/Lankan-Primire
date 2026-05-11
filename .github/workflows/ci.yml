@@ -33,7 +33,6 @@ jobs:
       
     - name: Run tests
       run: npm test
-      continue-on-error: true
 
   frontend-test:
     name: Frontend Tests & Lint
@@ -58,11 +57,9 @@ jobs:
 
     - name: Check code formatting/linting
       run: npm run lint
-      continue-on-error: true
       
     - name: Run tests
       run: npm run test -- --run
-      continue-on-error: true
 
   docker-build:
     name: Build & Push Docker Images
