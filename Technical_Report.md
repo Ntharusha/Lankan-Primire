@@ -58,4 +58,4 @@ A professional-grade monitoring suite was implemented to ensure 99.9% uptime and
 ---
 
 ## 6. Conclusion
-Lankan Primire is more than a ticketing app; it is a demonstration of how modern cloud technologies can be integrated into a seamless, automated, and observable system. It represents a "production-first" mindset where maintenance and monitoring are as important as the code itself.
+Lankan Primire is more than a ticketing app; it is a demonstration of how modern cloud technologies can be integrated into a seamless, automated, and observable system. It represents a "production-first" mindset where maintenance and monitoring are as important as the code itself...
