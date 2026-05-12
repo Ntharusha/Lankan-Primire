@@ -1,4 +1,4 @@
-# Lankan Primire
+# Lankan Primire - https://lankan-primire.vercel.app/
 
 Welcome to the **Lankan Primire** repository! 🎬 This is a full-stack movie digital ticketing application designed to provide a seamless cinema booking experience. 
 
