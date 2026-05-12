@@ -1,8 +1,30 @@
 global:
-  scrape_interval: 15s
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+# Load alert rules
+rule_files:
+  - "alerts.yml"
+
+# Alertmanager integration (configure endpoint when Alertmanager is deployed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
 
 scrape_configs:
-  - job_name: 'lankan-premiere-api'
+  # Express API — exposes /metrics via express-prom-bundle
+  - job_name: 'api'
     metrics_path: '/metrics'
     static_configs:
       - targets: ['server:5000']
+
+  # Host-level OS/hardware metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Per-container CPU/mem/net metrics
+  - job_name: 'containers'
+    static_configs:
+      - targets: ['cadvisor:8080']

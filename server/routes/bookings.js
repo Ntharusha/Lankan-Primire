@@ -152,6 +152,11 @@ router.post('/', auth, async (req, res) => {
       req.io.emit('booking_completed', populated);
     }
 
+    // Send confirmation email with QR code ticket (non-blocking — never fails the request)
+    sendBookingConfirmation(populated).catch((err) =>
+      console.error('[Bookings] Email send error (non-fatal):', err.message)
+    );
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -337,6 +342,11 @@ router.post('/split/:id/pay', async (req, res) => {
       if (req.io) {
         req.io.emit('booking_completed', booking);
       }
+
+      // Send confirmation email with QR ticket to the primary user
+      sendBookingConfirmation(booking).catch((err) =>
+        console.error('[Bookings] Split confirmation email error (non-fatal):', err.message)
+      );
     }
 
     await booking.save();

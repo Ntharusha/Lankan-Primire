@@ -204,12 +204,16 @@ jobs:
               driver: bridge
           EOF
 
-          # Create Prometheus config to scrape ALL performance data
-          cat <<EOF > prometheus/prometheus.yml
+          # Create Prometheus config with alerting enabled
+          cat <<'PROM_EOF' > prometheus/prometheus.yml
           global:
-            scrape_interval: 15s
+            scrape_interval:     15s
+            evaluation_interval: 15s
+          rule_files:
+            - "alerts.yml"
           scrape_configs:
             - job_name: 'api'
+              metrics_path: '/metrics'
               static_configs:
                 - targets: ['server:5000']
             - job_name: 'node'
@@ -218,7 +222,37 @@ jobs:
             - job_name: 'containers'
               static_configs:
                 - targets: ['cadvisor:8080']
-          EOF
+          PROM_EOF
+
+          # Create Prometheus alert rules
+          cat <<'ALERTS_EOF' > prometheus/alerts.yml
+          groups:
+            - name: api_alerts
+              rules:
+                - alert: APIInstanceDown
+                  expr: up{job="api"} == 0
+                  for: 1m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: "Lankan Premiere API is DOWN"
+                - alert: HighAPIErrorRate
+                  expr: |
+                    (sum(rate(http_requests_total{status=~"5.."}[5m]))
+                    / sum(rate(http_requests_total[5m]))) * 100 > 5
+                  for: 2m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: "High API error rate (>5%)"
+                - alert: HighCPUUsage
+                  expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+                  for: 5m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: "Host CPU above 85%"
+          ALERTS_EOF
 
           # Create Grafana Datasource
           cat <<EOF > grafana/provisioning/datasources/prometheus.yml

@@ -6,6 +6,18 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  # ── Remote State Backend (recommended for team / production use) ──────────
+  # Uncomment and configure before running `terraform init` in a shared environment.
+  # This stores tfstate in S3 and uses DynamoDB for state locking.
+  #
+  # backend "s3" {
+  #   bucket         = "lankan-primire-tfstate"   # Create this bucket first
+  #   key            = "prod/terraform.tfstate"
+  #   region         = "ap-south-1"
+  #   encrypt        = true
+  #   dynamodb_table = "lankan-primire-tf-lock"   # Create this table first
+  # }
 }
 
 provider "aws" {
@@ -109,13 +121,54 @@ resource "aws_instance" "app" {
     # Prometheus Config
     cat <<'PROMETHEUS_EOF' > /home/ubuntu/app/prometheus/prometheus.yml
 global:
-  scrape_interval: 15s
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alerts.yml"
+
 scrape_configs:
   - job_name: 'api'
     metrics_path: '/metrics'
     static_configs:
       - targets: ['server:5000']
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+  - job_name: 'containers'
+    static_configs:
+      - targets: ['cadvisor:8080']
 PROMETHEUS_EOF
+
+    # Prometheus Alert Rules
+    cat <<'ALERTS_EOF' > /home/ubuntu/app/prometheus/alerts.yml
+groups:
+  - name: api_alerts
+    rules:
+      - alert: APIInstanceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Lankan Premiere API is DOWN"
+      - alert: HighAPIErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m]))
+          / sum(rate(http_requests_total[5m]))) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High API error rate (>5%)"
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host CPU above 85%"
+ALERTS_EOF
 
     # Grafana Datasource
     cat <<'DATASOURCE_EOF' > /home/ubuntu/app/grafana/provisioning/datasources/prometheus.yml

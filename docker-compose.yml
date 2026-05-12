@@ -7,6 +7,8 @@ services:
     env_file:
       - ./server/.env
     restart: unless-stopped
+    networks:
+      - lankan-net
 
   # Cloudflare Tunnel to provide HTTPS for your backend
   # You will need to provide your TUNNEL_TOKEN in the .env file
@@ -16,23 +18,59 @@ services:
     command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - lankan-net
 
   prometheus:
-    image: quay.io/prometheus/prometheus:latest
+    image: prom/prometheus:v2.51.1
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml
     restart: unless-stopped
+    networks:
+      - lankan-net
 
   grafana:
-    image: grafana/grafana:10.4.2
+    image: grafana/grafana-oss:10.4.2
     ports:
       - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_ANGULAR_SUPPORT_ENABLED=true
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
     restart: unless-stopped
+    networks:
+      - lankan-net
+
+  # Host-level OS/hardware metrics (CPU, memory, disk, network)
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - lankan-net
+
+  # Per-container resource metrics (CPU/mem per Docker container)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - lankan-net
+
+networks:
+  lankan-net:
+    driver: bridge

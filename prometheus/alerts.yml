@@ -1,0 +1,110 @@
+groups:
+  - name: lankan_premiere_api_alerts
+    interval: 30s
+    rules:
+      # Alert when API error rate exceeds 5% over 5 minutes
+      - alert: HighAPIErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{project_name="lankan-premiere", status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{project_name="lankan-premiere"}[5m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "High API error rate detected"
+          description: "Error rate is {{ printf \"%.2f\" $value }}% over the last 5 minutes (threshold: 5%). Investigate server logs immediately."
+
+      # Alert when p95 API response time exceeds 2 seconds
+      - alert: HighAPILatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{project_name="lankan-premiere"}[5m])) by (le, path)
+          ) > 2
+        for: 3m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API latency on {{ $labels.path }}"
+          description: "p95 latency is {{ printf \"%.2f\" $value }}s on route {{ $labels.path }} (threshold: 2s)."
+
+      # Alert when API is completely unreachable
+      - alert: APIInstanceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "Lankan Premiere API is DOWN"
+          description: "The API server (job=api) has been unreachable for more than 1 minute. Immediate action required."
+
+  - name: lankan_premiere_infrastructure_alerts
+    interval: 30s
+    rules:
+      # Alert when host CPU usage exceeds 85% for 5 minutes
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ printf \"%.1f\" $value }}% on {{ $labels.instance }} (threshold: 85%)."
+
+      # Alert when available memory drops below 200MB
+      - alert: LowMemoryAvailable
+        expr: |
+          node_memory_MemAvailable_bytes < 200 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Low memory on {{ $labels.instance }}"
+          description: "Only {{ printf \"%.0f\" $value | humanize }}B of memory remaining on {{ $labels.instance }}. Risk of OOM kills."
+
+      # Alert when disk usage exceeds 80%
+      - alert: HighDiskUsage
+        expr: |
+          (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is {{ printf \"%.1f\" $value }}% on {{ $labels.instance }} (threshold: 80%)."
+
+      # Alert when node-exporter itself goes down
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "node-exporter is DOWN"
+          description: "Host metrics collection has stopped. The EC2 instance may be unreachable."
+
+  - name: lankan_premiere_booking_alerts
+    interval: 60s
+    rules:
+      # Alert when booking request rate drops to near zero during expected peak hours
+      # (Useful for detecting downstream failures that silently stop traffic)
+      - alert: BookingTrafficDrop
+        expr: |
+          sum(rate(http_requests_total{project_name="lankan-premiere", path=~".*bookings.*"}[10m])) < 0.01
+        for: 15m
+        labels:
+          severity: warning
+          service: bookings
+        annotations:
+          summary: "Booking traffic has dropped to near zero"
+          description: "No booking requests have been received in the last 15 minutes. This may indicate a connectivity or upstream issue."
