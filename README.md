@@ -376,7 +376,7 @@ To duplicate the automated deployment pipeline on your own GitHub fork, ensure t
 - `EC2_IP`: The public Elastic IP deployed by Terraform.
 - `EC2_USER`: Generally `ubuntu` for AWS EC2 instances.
 - `MONGODB_URI`: Production Atlas cluster connection string.
-- `JWT_SECRET`: Safe encryption key for JWT.
+- `JWT_SECRET`: Safe encryption key for JWT...
 
 ---
 
