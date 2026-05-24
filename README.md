@@ -9,7 +9,6 @@ This README outlines the **Application Features**, **API Architecture**, and **D
 ## ✨ Features
 - **Movie Catalog & Scheduling**: Browse currently airing and upcoming movies, view details, trailers, and scheduled showtimes.
 - **Real-Time Seat Reservation**: Interactive theater layout with live seat locking via WebSockets to prevent double-bookings.
-- **Secure Payment Gateway**: End-to-end secure ticketing transactions utilizing Stripe.
 - **Digital Ticketing**: Scannable QR code generation for digital ticket validation at the cinema.
 - **User Reviews & Ratings**: Allow users to share community feedback and rate movies.
 - **Robust Security**: Rate limiting, Helmet HTTP headers, JWT authentication, and secure Docker-based deployment.
