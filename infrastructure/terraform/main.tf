@@ -91,12 +91,12 @@ resource "aws_instance" "app" {
   associate_public_ip_address = true
   user_data_replace_on_change = true
 
-  # Runs on first boot: installs Docker and starts your containers
+  # Runs on first boot: installs Docker and Git, then sets up app directory
   user_data = <<-EOF
     #!/bin/bash
     # Update and install dependencies
     apt-get update -y
-    apt-get install -y curl
+    apt-get install -y curl git
 
     # Use official Docker convenience script
     curl -fsSL https://get.docker.com -o get-docker.sh
@@ -110,146 +110,10 @@ resource "aws_instance" "app" {
       sleep 2
     done
 
-    # Setup App Directory
-    mkdir -p /home/ubuntu/app/prometheus
-    mkdir -p /home/ubuntu/app/grafana/provisioning/datasources
-    mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
-    
-    # Fix permissions for monitoring tools
-    chmod -R 777 /home/ubuntu/app
-
-    # Prometheus Config
-    cat <<'PROMETHEUS_EOF' > /home/ubuntu/app/prometheus/prometheus.yml
-global:
-  scrape_interval:     15s
-  evaluation_interval: 15s
-
-rule_files:
-  - "alerts.yml"
-
-scrape_configs:
-  - job_name: 'api'
-    metrics_path: '/metrics'
-    static_configs:
-      - targets: ['server:5000']
-  - job_name: 'node'
-    static_configs:
-      - targets: ['node-exporter:9100']
-  - job_name: 'containers'
-    static_configs:
-      - targets: ['cadvisor:8080']
-PROMETHEUS_EOF
-
-    # Prometheus Alert Rules
-    cat <<'ALERTS_EOF' > /home/ubuntu/app/prometheus/alerts.yml
-groups:
-  - name: api_alerts
-    rules:
-      - alert: APIInstanceDown
-        expr: up{job="api"} == 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Lankan Premiere API is DOWN"
-      - alert: HighAPIErrorRate
-        expr: |
-          (sum(rate(http_requests_total{status=~"5.."}[5m]))
-          / sum(rate(http_requests_total[5m]))) * 100 > 5
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High API error rate (>5%)"
-      - alert: HighCPUUsage
-        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Host CPU above 85%"
-ALERTS_EOF
-
-    # Grafana Datasource
-    cat <<'DATASOURCE_EOF' > /home/ubuntu/app/grafana/provisioning/datasources/prometheus.yml
-apiVersion: 1
-datasources:
-  - name: Prometheus
-    type: prometheus
-    url: http://prometheus:9090
-    access: proxy
-    isDefault: true
-DATASOURCE_EOF
-
-    # Grafana Dashboard Provider
-    cat <<'DASHBOARD_PROV_EOF' > /home/ubuntu/app/grafana/provisioning/dashboards/providers.yml
-apiVersion: 1
-providers:
-  - name: 'Lankan Premiere'
-    orgId: 1
-    folder: ''
-    type: file
-    disableDeletion: false
-    updateIntervalSeconds: 10
-    options:
-      path: /etc/grafana/provisioning/dashboards
-DASHBOARD_PROV_EOF
-
-    # Grafana Dashboard JSON
-    cat <<'DASHBOARD_JSON_EOF' > /home/ubuntu/app/grafana/provisioning/dashboards/express-dashboard.json
-{
-  "annotations": { "list": [ { "builtIn": 1, "datasource": "-- Grafana --", "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" } ] },
-  "editable": true, "id": null, "schemaVersion": 39, "title": "Express API Metrics", "uid": "express-metrics", "version": 1
-}
-DASHBOARD_JSON_EOF
-
-    # Docker Compose File
-    cat <<COMPOSE_EOF > /home/ubuntu/app/docker-compose.yml
-services:
-  server:
-    image: ${var.dockerhub_username}/lankan-primire-server:latest
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
-    environment:
-      - MONGODB_URI="${var.mongodb_uri}"
-      - JWT_SECRET="${var.jwt_secret}"
-      - NODE_ENV=production
-
-  client:
-    image: ${var.dockerhub_username}/lankan-primire-client:latest
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    depends_on:
-      - server
-
-  prometheus:
-    image: prom/prometheus:v2.51.1
-    restart: unless-stopped
-    user: root
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-
-  grafana:
-    image: grafana/grafana-oss:10.4.2
-    restart: unless-stopped
-    user: root
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-    depends_on:
-      - prometheus
-COMPOSE_EOF
-
-    # Start the stack
-    cd /home/ubuntu/app
-    docker compose up -d
+    # Setup App Directory with proper permissions
+    mkdir -p /home/ubuntu/app
+    chown -R ubuntu:ubuntu /home/ubuntu/app
+    chmod -R 755 /home/ubuntu/app
   EOF
 
   tags = { Name = "lankan-primire-ec2" }
@@ -261,3 +125,4 @@ resource "aws_eip" "app_eip" {
   domain   = "vpc"
   tags     = { Name = "lankan-primire-eip" }
 }
+

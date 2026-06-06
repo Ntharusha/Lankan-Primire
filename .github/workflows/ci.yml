@@ -105,179 +105,41 @@ jobs:
     if: github.event_name == 'push'
     
     steps:
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v1.0.3
-      env:
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Copy config files via SCP
+      uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.EC2_IP }}
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        envs: MONGODB_URI,JWT_SECRET
-        script: |
-          # Setup directories
-          mkdir -p /home/ubuntu/app/prometheus
-          mkdir -p /home/ubuntu/app/grafana/provisioning/datasources
-          mkdir -p /home/ubuntu/app/grafana/provisioning/dashboards
-          cd /home/ubuntu/app
+        source: "docker-compose.prod.yml,prometheus/,grafana/"
+        target: "/home/ubuntu/app"
 
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      with:
+        host: ${{ secrets.EC2_IP }}
+        username: ubuntu
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        envs: MONGODB_URI,JWT_SECRET,DOCKER_USERNAME
+        script: |
+          cd /home/ubuntu/app
+          
           # Create .env file securely to prevent shell mangling
           printf "MONGODB_URI=%s\n" "$MONGODB_URI" > .env
           printf "JWT_SECRET=%s\n" "$JWT_SECRET" >> .env
+          printf "DOCKER_USERNAME=%s\n" "$DOCKER_USERNAME" >> .env
           printf "NODE_ENV=production\n" >> .env
 
-          # Create Docker Compose file with Full Performance Monitoring
-          cat <<EOF > docker-compose.yml
-          services:
-            server:
-              image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "5000:5000"
-              env_file: .env
-
-            client:
-              image: ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "3000:80"
-              depends_on:
-                - server
-
-            prometheus:
-              image: prom/prometheus:v2.51.1
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "9090:9090"
-              volumes:
-                - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-
-            grafana:
-              image: grafana/grafana-oss:10.4.2
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "3001:3000"
-              user: root
-              environment:
-                - GF_SECURITY_ADMIN_PASSWORD=admin
-                - GF_ANGULAR_SUPPORT_ENABLED=true
-                - GF_PLUGINS_ANGULAR_SUPPORT_ENABLED=true
-              volumes:
-                - ./grafana/provisioning:/etc/grafana/provisioning
-              depends_on:
-                - prometheus
-
-            node-exporter:
-              image: prom/node-exporter:v1.7.0
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "9100:9100"
-
-            cadvisor:
-              image: gcr.io/cadvisor/cadvisor:v0.49.1
-              restart: unless-stopped
-              networks:
-                - lankan-net
-              ports:
-                - "8080:8080"
-              volumes:
-                - /:/rootfs:ro
-                - /var/run:/var/run:ro
-                - /sys:/sys:ro
-                - /var/lib/docker/:/var/lib/docker:ro
-                - /dev/disk/:/dev/disk:ro
-
-          networks:
-            lankan-net:
-              driver: bridge
-          EOF
-
-          # Create Prometheus config with alerting enabled
-          cat <<'PROM_EOF' > prometheus/prometheus.yml
-          global:
-            scrape_interval:     15s
-            evaluation_interval: 15s
-          rule_files:
-            - "alerts.yml"
-          scrape_configs:
-            - job_name: 'api'
-              metrics_path: '/metrics'
-              static_configs:
-                - targets: ['server:5000']
-            - job_name: 'node'
-              static_configs:
-                - targets: ['node-exporter:9100']
-            - job_name: 'containers'
-              static_configs:
-                - targets: ['cadvisor:8080']
-          PROM_EOF
-
-          # Create Prometheus alert rules
-          cat <<'ALERTS_EOF' > prometheus/alerts.yml
-          groups:
-            - name: api_alerts
-              rules:
-                - alert: APIInstanceDown
-                  expr: up{job="api"} == 0
-                  for: 1m
-                  labels:
-                    severity: critical
-                  annotations:
-                    summary: "Lankan Premiere API is DOWN"
-                - alert: HighAPIErrorRate
-                  expr: |
-                    (sum(rate(http_requests_total{status=~"5.."}[5m]))
-                    / sum(rate(http_requests_total[5m]))) * 100 > 5
-                  for: 2m
-                  labels:
-                    severity: critical
-                  annotations:
-                    summary: "High API error rate (>5%)"
-                - alert: HighCPUUsage
-                  expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
-                  for: 5m
-                  labels:
-                    severity: warning
-                  annotations:
-                    summary: "Host CPU above 85%"
-          ALERTS_EOF
-
-          # Create Grafana Datasource
-          cat <<EOF > grafana/provisioning/datasources/prometheus.yml
-          apiVersion: 1
-          datasources:
-            - name: Prometheus
-              type: prometheus
-              url: http://prometheus:9090
-              access: proxy
-              isDefault: true
-          EOF
-
-          # Create Grafana Dashboard Provider
-          cat <<EOF > grafana/provisioning/dashboards/provider.yml
-          apiVersion: 1
-          providers:
-            - name: 'App Dashboards'
-              orgId: 1
-              folder: ''
-              type: file
-              options:
-                path: /etc/grafana/provisioning/dashboards
-          EOF
-
           # Restart everything
-          sudo docker compose pull
-          sudo docker compose up -d --remove-orphans
+          sudo docker compose -f docker-compose.prod.yml pull
+          sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
           sudo docker image prune -f

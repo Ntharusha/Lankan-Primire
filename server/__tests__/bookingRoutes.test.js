@@ -8,6 +8,12 @@ const Booking = require('../models/Booking');
 const bookingRoutes = require('../routes/bookings');
 const jwt = require('jsonwebtoken');
 
+// Mock Notification Service to avoid async leaks during route tests
+jest.mock('../services/notificationService', () => ({
+    sendBookingConfirmation: jest.fn().mockResolvedValue(true),
+    sendSplitInvite: jest.fn().mockResolvedValue(true),
+}));
+
 const app = express();
 app.use(express.json());
 

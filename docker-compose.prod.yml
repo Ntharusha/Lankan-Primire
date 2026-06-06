@@ -1,0 +1,72 @@
+services:
+  server:
+    image: ${DOCKER_USERNAME}/lankan-primire-server:latest
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "5000:5000"
+    env_file: .env
+
+  client:
+    image: ${DOCKER_USERNAME}/lankan-primire-client:latest
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+  prometheus:
+    image: prom/prometheus:v2.51.1
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+
+  grafana:
+    image: grafana/grafana-oss:10.4.2
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "3001:3000"
+    user: root
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_ANGULAR_SUPPORT_ENABLED=true
+      - GF_PLUGINS_ANGULAR_SUPPORT_ENABLED=true
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "9100:9100"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    networks:
+      - lankan-net
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+networks:
+  lankan-net:
+    driver: bridge
