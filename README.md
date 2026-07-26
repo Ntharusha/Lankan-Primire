@@ -5,11 +5,9 @@
 [![Container Orchestration](https://img.shields.io/badge/Orchestration-Kubernetes-blue?logo=kubernetes)](k8s)
 [![DevSecOps](https://img.shields.io/badge/DevSecOps-Trivy%20Scan-brightgreen?logo=aquasecurity)](.github/workflows/ci.yml)
 [![API Specs](https://img.shields.io/badge/OpenAPI-Swagger%20UI-green?logo=swagger)](server/swagger.json)
-[![Internship Guide](https://img.shields.io/badge/Interview%20Showcase-Guide%20Included-orange)](INTERNSHIP_SHOWCASE.md)
 
 **Production Web App:** [https://lankan-primire.vercel.app/](https://lankan-primire.vercel.app/)  
 **Interactive API Documentation:** `http://localhost:5000/api-docs`  
-**Internship Technical Showcase & Interview Guide:** [INTERNSHIP_SHOWCASE.md](INTERNSHIP_SHOWCASE.md)
 
 **Lankan Primire** is an enterprise-grade full-stack cinema management and ticketing web application designed to demonstrate modern software development, high-concurrency real-time WebSocket synchronization, DevSecOps pipelines, and production cloud infrastructure automation.
 
