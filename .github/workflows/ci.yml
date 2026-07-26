@@ -1,4 +1,10 @@
-name: Lankan Primire CI/CD
+# ==============================================================================
+# GitHub Actions CI/CD Pipeline
+# Project: Lankan Primire
+# Description: Automated testing, multi-stage container building, and EC2 deployment
+# ==============================================================================
+
+name: Production CI/CD Pipeline
 
 on:
   push:
@@ -7,80 +13,120 @@ on:
     branches: [ "main", "dev" ]
 
 env:
+  # Enforce Node 24 for JavaScript action runtimes
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: Run Backend Tests
+  # ----------------------------------------------------------------------------
   backend-test:
-    name: Backend Tests
+    name: Backend Test Suite
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./server
     
     steps:
-    - name: Checkout code
+    - name: Checkout Codebase
       uses: actions/checkout@v4
     
-    - name: Set up Node.js
+    - name: Setup Node.js Environment
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
         cache-dependency-path: './server/package-lock.json'
         
-    - name: Install dependencies
+    - name: Install Dependencies
       run: npm ci
       
-    - name: Run tests
+    - name: Run Backend Integration & Unit Tests
       run: npm test
 
+    - name: Security Vulnerability Audit
+      run: npm audit --audit-level=high || true
+
+  # ----------------------------------------------------------------------------
+  # Job 2: Run Frontend Tests and Linting
+  # ----------------------------------------------------------------------------
   frontend-test:
-    name: Frontend Tests & Lint
+    name: Frontend Test & Lint Suite
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./client
     
     steps:
-    - name: Checkout code
+    - name: Checkout Codebase
       uses: actions/checkout@v4
     
-    - name: Set up Node.js
+    - name: Setup Node.js Environment
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
         cache-dependency-path: './client/package-lock.json'
         
-    - name: Install dependencies
+    - name: Install Dependencies
       run: npm ci
 
-    - name: Check code formatting/linting
+    - name: Audit Code Linting & Formatting
       run: npm run lint
       
-    - name: Run tests
+    - name: Run Frontend Component Tests
       run: npm run test -- --run
 
-  docker-build:
-    name: Build & Push Docker Images
+    - name: Security Vulnerability Audit
+      run: npm audit --audit-level=high || true
+
+  # ----------------------------------------------------------------------------
+  # Job 3: DevSecOps Vulnerability Scan (Trivy)
+  # ----------------------------------------------------------------------------
+  security-scan:
+    name: DevSecOps Security Audit
     needs: [backend-test, frontend-test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Codebase
+      uses: actions/checkout@v4
+
+    - name: Build Local Backend Container for Scanning
+      run: docker build -t lankan-primire-server:scan ./server
+
+    - name: Run Trivy Vulnerability Scanner on Backend Image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'lankan-primire-server:scan'
+        format: 'table'
+        exit-code: '0'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+  # ----------------------------------------------------------------------------
+  # Job 4: Build & Publish Production Container Images
+  # ----------------------------------------------------------------------------
+  docker-build:
+    name: Build & Publish Container Images
+    needs: [backend-test, frontend-test, security-scan]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
     steps:
-    - name: Checkout code
+    - name: Checkout Codebase
       uses: actions/checkout@v4
 
-    - name: Log in to Docker Hub
+    - name: Authenticate to Docker Hub Registry
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Set up Docker Buildx
+    - name: Setup Docker Buildx Compiler
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and push Backend Image
+    - name: Build & Push Backend Container Image
       uses: docker/build-push-action@v5
       with:
         context: ./server
@@ -89,7 +135,7 @@ jobs:
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:latest
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-server:${{ github.sha }}
 
-    - name: Build and push Frontend Image
+    - name: Build & Push Frontend Container Image
       uses: docker/build-push-action@v5
       with:
         context: ./client
@@ -98,17 +144,20 @@ jobs:
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:latest
           ${{ secrets.DOCKER_USERNAME }}/lankan-primire-client:${{ github.sha }}
 
+  # ----------------------------------------------------------------------------
+  # Job 4: Remote Deploy to AWS EC2 via SSH
+  # ----------------------------------------------------------------------------
   deploy:
-    name: Deploy to EC2
+    name: Deploy to Remote AWS EC2
     needs: docker-build
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
     steps:
-    - name: Checkout code
+    - name: Checkout Codebase
       uses: actions/checkout@v4
 
-    - name: Copy config files via SCP
+    - name: Transfer Configuration & Compose Files via SCP
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.EC2_IP }}
@@ -118,7 +167,7 @@ jobs:
         source: "docker-compose.prod.yml,prometheus/,grafana/"
         target: "/home/ubuntu/app"
 
-    - name: Deploy via SSH
+    - name: Recreate Container Stack via Remote SSH
       uses: appleboy/ssh-action@v1.0.3
       env:
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
@@ -133,13 +182,15 @@ jobs:
         script: |
           cd /home/ubuntu/app
           
-          # Create .env file securely to prevent shell mangling
+          # Write environment variables dynamically to target hosts
           printf "MONGODB_URI=%s\n" "$MONGODB_URI" > .env
           printf "JWT_SECRET=%s\n" "$JWT_SECRET" >> .env
           printf "DOCKER_USERNAME=%s\n" "$DOCKER_USERNAME" >> .env
           printf "NODE_ENV=production\n" >> .env
 
-          # Restart everything
+          # Pull absolute latest images and spin up services
           sudo docker compose -f docker-compose.prod.yml pull
           sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          
+          # Garbage collect unused layers to protect EBS capacity
           sudo docker image prune -f

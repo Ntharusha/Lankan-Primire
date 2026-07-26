@@ -1,0 +1,151 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Lankan Primire API Specification",
+    "version": "1.0.0",
+    "description": "Production REST API documentation for Lankan Primire - Cinema Ticket Booking and Real-Time Seat Synchronization Platform.",
+    "contact": {
+      "name": "Full-Stack & DevOps Portfolio Showcase"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://lankan-primire.vercel.app",
+      "description": "Production Edge Network"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "ok" },
+          "message": { "type": "string", "example": "Server is running" },
+          "database": { "type": "string", "example": "connected" },
+          "readyState": { "type": "integer", "example": 1 }
+        }
+      },
+      "Movie": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "65b28a9f1c9d8e7f6a5b4c3d" },
+          "title": { "type": "string", "example": "Dune: Part Two" },
+          "overview": { "type": "string", "example": "Paul Atreides unites with Chani and the Fremen..." },
+          "poster_path": { "type": "string", "example": "https://image.tmdb.org/t/p/w500/1pdfLPoVxWGlBGeOoWazDStjP2C.jpg" },
+          "vote_average": { "type": "number", "example": 8.6 },
+          "runtime": { "type": "integer", "example": 166 },
+          "isShowing": { "type": "boolean", "example": true },
+          "moodTags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Action", "Sci-Fi", "Epic"]
+          }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "65b28b0f1c9d8e7f6a5b4c3e" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "example": "Ntharusha" },
+              "email": { "type": "string", "example": "ntharusha@example.com" },
+              "phone": { "type": "string", "example": "+94771234567" }
+            }
+          },
+          "show_movie": { "type": "string", "example": "65b28a9f1c9d8e7f6a5b4c3d" },
+          "bookedSeats": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["A5", "A6"]
+          },
+          "amount": { "type": "integer", "example": 2400 },
+          "isPaid": { "type": "boolean", "example": true },
+          "status": { "type": "string", "example": "confirmed" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health Check & Database Diagnostic Endpoint",
+        "description": "Returns operational metrics, server uptime, and MongoDB connectivity status.",
+        "responses": {
+          "200": {
+            "description": "Server health status retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthCheck" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/movies": {
+      "get": {
+        "summary": "Fetch Movie Catalog",
+        "description": "Retrieves active movie listings with localized metadata and mood tags.",
+        "responses": {
+          "200": {
+            "description": "Array of active movies.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Movie" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shows": {
+      "get": {
+        "summary": "Get Available Showtimes and Theater Seat Layouts",
+        "responses": {
+          "200": {
+            "description": "Showtimes and seat availability layout."
+          }
+        }
+      }
+    },
+    "/api/bookings": {
+      "get": {
+        "summary": "Get User Bookings",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of user ticket bookings." }
+        }
+      },
+      "post": {
+        "summary": "Create Ticket Booking",
+        "responses": {
+          "201": { "description": "Booking created and QR code generated." }
+        }
+      }
+    },
+    "/api/reviews": {
+      "get": {
+        "summary": "Fetch Movie Reviews",
+        "responses": {
+          "200": { "description": "List of verified user reviews and ratings." }
+        }
+      }
+    }
+  }
+}

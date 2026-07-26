@@ -13,6 +13,8 @@ const mongoose = require('mongoose'); // 👈 Added missing import
 const connectDB = require('./config/db');
 const promBundle = require('express-prom-bundle');
 const promClient = require('prom-client');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -93,6 +95,9 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Routes
 app.use('/api/movies', movieRoutes);

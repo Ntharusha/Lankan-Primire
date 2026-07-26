@@ -1,59 +1,72 @@
-# Lankan Primire - https://lankan-primire.vercel.app/
+# 🎬 Lankan Primire - Full-Stack & DevOps Portfolio Project
 
-Welcome to the **Lankan Primire** repository! 🎬 This is a full-stack movie digital ticketing application designed to provide a seamless cinema booking experience. 
+[![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue?logo=githubactions)](.github/workflows/ci.yml)
+[![Infrastructure as Code](https://img.shields.io/badge/IaC-Terraform-purple?logo=terraform)](infrastructure/terraform)
+[![Container Orchestration](https://img.shields.io/badge/Orchestration-Kubernetes-blue?logo=kubernetes)](k8s)
+[![DevSecOps](https://img.shields.io/badge/DevSecOps-Trivy%20Scan-brightgreen?logo=aquasecurity)](.github/workflows/ci.yml)
+[![API Specs](https://img.shields.io/badge/OpenAPI-Swagger%20UI-green?logo=swagger)](server/swagger.json)
+[![Internship Guide](https://img.shields.io/badge/Interview%20Showcase-Guide%20Included-orange)](INTERNSHIP_SHOWCASE.md)
 
-This README outlines the **Application Features**, **API Architecture**, and **DevOps/CI/CD pipeline** behind the project.
+**Production Web App:** [https://lankan-primire.vercel.app/](https://lankan-primire.vercel.app/)  
+**Interactive API Documentation:** `http://localhost:5000/api-docs`  
+**Internship Technical Showcase & Interview Guide:** [INTERNSHIP_SHOWCASE.md](INTERNSHIP_SHOWCASE.md)
 
----
-
-## ✨ Features
-- **Movie Catalog & Scheduling**: Browse currently airing and upcoming movies, view details, trailers, and scheduled showtimes.
-- **Real-Time Seat Reservation**: Interactive theater layout with live seat locking via WebSockets to prevent double-bookings.
-- **Digital Ticketing**: Scannable QR code generation for digital ticket validation at the cinema.
-- **User Reviews & Ratings**: Allow users to share community feedback and rate movies.
-- **Robust Security**: Rate limiting, Helmet HTTP headers, JWT authentication, and secure Docker-based deployment.
-
----
-
-## 🏗️ Technology Stack
-- **Frontend**: React, Vite, TailwindCSS, Framer Motion
-- **Backend**: Node.js, Express.js, Socket.IO
-- **Database**: MongoDB (Atlas)
-- **Infrastructure & Cloud**: AWS (EC2, Elastic IP), Terraform
-- **Containerization**: Docker, Docker Compose
-- **CI/CD**: GitHub Actions
-- **Observability**: Prometheus & Grafana (WIP)
+**Lankan Primire** is an enterprise-grade full-stack cinema management and ticketing web application designed to demonstrate modern software development, high-concurrency real-time WebSocket synchronization, DevSecOps pipelines, and production cloud infrastructure automation.
 
 ---
 
-## 🧩 System Architecture
+## 🌟 Key Features & Implementation Highlights
+
+* **Real-time Seat Locking (Concurrency Control):** Socket.IO synchronization preventing double-booking race conditions through atomic MongoDB locks and 2-minute background TTL lock cleanup.
+* **OpenAPI / Swagger Integration:** Interactive API documentation accessible at `/api-docs`.
+* **Digital QR Code Ticketing & Split Payments:** Scannable QR code generation for ticket validation and multi-user split checkout.
+* **DevSecOps Pipeline:** GitHub Actions automated testing, `npm audit`, and **Trivy container image security scanning**.
+* **Infrastructure as Code (Terraform):** Reproducible AWS EC2, Elastic IP, and Security Group provisioning.
+* **Kubernetes Orchestration (`k8s/`):** Production Kubernetes manifests including ClusterIP services, Ingress routing, and HorizontalPodAutoscaler (HPA).
+* **Observability & Monitoring Stack:** Express metrics collection with `prom-client`, Prometheus scraping, and Grafana visualization dashboards.
+
+---
+
+## 🛠️ Tech Stack & Ecosystem
+
+* **Frontend:** React 18, Vite, TailwindCSS, Framer Motion, Axios, Socket.IO Client
+* **Backend:** Node.js, Express.js, Socket.IO, JWT Auth, Helmet, Rate Limiter, Swagger UI
+* **Database:** MongoDB Atlas (Cloud) & Local MongoDB
+* **Infrastructure & Cloud:** AWS EC2, Elastic IP, Terraform (IaC)
+* **Orchestration & Containers:** Docker, Multi-Stage Builds, Docker Compose, Kubernetes (K8s)
+* **CI/CD & Security:** GitHub Actions, Vitest, Jest, Trivy Container Vulnerability Scanner
+* **Observability:** Prometheus, Grafana, Node Exporter, cAdvisor
+
+---
+
+## Architecture Design
 
 ```mermaid
 graph TB
-    subgraph Client["🖥️ Frontend - React/Vite"]
+    subgraph Client["Frontend - React/Vite"]
         UI[React UI<br/>TailwindCSS + Framer Motion]
         CTX[Context API<br/>Auth / Booking / Favourites]
         SVC[Service Layer<br/>Axios + Socket.IO Client]
     end
 
-    subgraph Server["⚙️ Backend - Node.js/Express"]
+    subgraph Server["Backend - Node.js/Express"]
         MW[Middleware<br/>Helmet / CORS / Rate Limit / JWT Auth]
         API[REST API Routes<br/>/movies /shows /bookings<br/>/payments /users /reviews]
         WS[Socket.IO Server<br/>Real-time Seat Locking]
         BL[Business Logic<br/>Dynamic Pricing / Notifications]
     end
 
-    subgraph Data["💾 Data Layer"]
+    subgraph Data["Data Layer"]
         DB[(MongoDB Atlas)]
     end
 
-    subgraph Infra["☁️ Infrastructure"]
+    subgraph Infra["Infrastructure"]
         EC2[AWS EC2]
         TF[Terraform IaC]
         DOCKER[Docker Compose]
     end
 
-    subgraph Monitoring["📊 Observability"]
+    subgraph Monitoring["Observability"]
         PROM[Prometheus]
         GRAF[Grafana]
     end
@@ -76,7 +89,7 @@ graph TB
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 lankan-primire/
@@ -101,24 +114,24 @@ lankan-primire/
 │   ├── package.json       # Server dependencies
 │   └── Dockerfile         # Server container build instructions
 ├── docker-compose.yml     # Local multi-container setup (DB, Client, Server)
-└── README.md              # Project documentation (You are here!)
+└── README.md              # Project documentation
 ```
 
 ---
 
-## 🔌 API Architecture & How It Works
+## API Architecture & Routing
 
-The backend provides a RESTful JSON API alongside a real-time WebSocket connection to handle high-concurrency tasks like seat selection.
+The backend server serves standard REST endpoints for CRUD actions and handles real-time seat locks using WebSockets.
 
-### Core REST Endpoints
-The Express server exposes the following main resource endpoints routed through `/api/*`:
-- `GET/POST /api/movies`: Fetch movie catalogs, individual movie details, or add new movies.
-- `GET/POST /api/shows`: Retrieve theater schedules, screening dates, and time slots.
-- `GET/POST /api/bookings`: View user booking history, create new booking records, and manage seat reservations.
-- `POST /api/payments`: Communicates securely with the Stripe API to generate Payment Intents and confirm transactions.
-- `GET/POST /api/users`: Handle user profiles, Clerk authentication webhooks, and preferences.
-- `GET/POST /api/reviews`: Submit text reviews and star ratings, or fetch community reviews for a specific movie.
-- `GET /api/health`: Provides a diagnostic check of the server and database connection status.
+### REST Endpoints
+All endpoints are prefix-routed through `/api/*` and return JSON payloads:
+* `GET/POST /api/movies`: Fetch catalog metadata or add entries.
+* `GET/POST /api/shows`: Retrieve theater time slots and seat configurations.
+* `GET/POST /api/bookings`: Fetch booking records or process ticket checkout.
+* `POST /api/payments`: Connects to Stripe API to complete seat purchases.
+* `GET/POST /api/users`: Manage profile schemas and webhook handles.
+* `GET/POST /api/reviews`: Process user feedback and ratings.
+* `GET /api/health`: Basic diagnostic ping returning server and database connection status.
 
 ```mermaid
 graph LR
@@ -168,12 +181,12 @@ graph LR
     style DB fill:#1a1a2e,stroke:#533483,color:#fff
 ```
 
-### Real-Time Socket.IO Logic
-Because multiple users might try to book the same prime seat simultaneously, we use **Socket.IO** for live synchronization:
-- `join_show`: Groups users viewing the same screening into a specific Socket room.
-- `lock_seat`: When a user clicks a seat, an event is emitted to instantly gray it out for everyone else viewing that show. This prevents race conditions.
-- `unlock_seat`: If a user changes their mind or their session expires, the seat is released back to the general pool for other users.
-- **Auto-Cleanup**: A cron-style background interval sweeps the database every 2 minutes to forcefully release any seats locked by inactive users who abandoned their session.
+### Real-Time WebSocket Logic
+To handle high concurrent traffic and prevent double-booking issues, I used **Socket.IO** to manage seat status:
+* `join_show`: Groups clients looking at the same show date into a specific room.
+* `lock_seat`: Temporarily locks seat coordinates, updating the state so that the seat shows as grayed out for other users in the room.
+* `unlock_seat`: Releases the lock if the user changes their mind or fails to pay.
+* **Auto-Cleanup Task:** I set up a background interval that sweeps the database every 2 minutes. It automatically unlocks any seat held for more than 10 minutes by an inactive user, keeping the ticket inventory open.
 
 ```mermaid
 sequenceDiagram
@@ -210,9 +223,9 @@ sequenceDiagram
 
 ---
 
-## ⚙️ DevOps Pipeline & Architecture
+## DevOps Pipeline & Infrastructure
 
-This project adopts a modern infrastructure-as-code and automated CI/CD approach, allowing for reliable and highly available zero-touch deployments.
+To simulate a professional environment, I configured automated pipeline jobs, container builds, and cloud hosting.
 
 ```mermaid
 graph LR
@@ -266,16 +279,15 @@ graph LR
     style CDN fill:#0f3460,stroke:#e94560,color:#fff
 ```
 
-### 1. Source Control & Continuous Integration (CI)
-Our pipeline uses **GitHub Actions** (`.github/workflows/ci.yml`) to govern code quality. When code is pushed or a PR is opened against the `main` branch:
-- **Backend Tests**: Configures Node.js, installs server dependencies (`npm ci`), and runs the backend test suite using Jest.
-- **Frontend Tests & Linting**: Installs client dependencies, enforces strict formatting guidelines (`npm run lint`), and executes Vitest for UI components.
+### 1. Continuous Integration (CI)
+I set up a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs on pushes or pull requests to the `main` or `dev` branches:
+* **Backend Validation:** Installs server dependencies and runs unit tests via Jest.
+* **Frontend Validation:** Audits code formatting using ESLint and runs component tests using Vitest.
 
 ### 2. Containerization (Docker)
-Both the client and server applications are containerized using **Docker**:
-- During a deployment to `main`, the CI workflow builds Docker images using `docker buildx`.
-- Caching is configured through Docker registry caches to significantly speed up build times.
-- Immutable images are tagged with both `latest` and a unique `github.sha` to enable safe rollbacks, and then pushed to **Docker Hub**.
+I containerized both the frontend client and the backend server:
+* **Docker Build:** The GitHub workflow uses `docker buildx` to compile container images.
+* **Tagging:** Images are tagged with the specific commit SHA (for version tracking) and also updated to `latest` before pushing to Docker Hub.
 
 ```mermaid
 graph TB
@@ -318,93 +330,91 @@ graph TB
 ```
 
 ### 3. Infrastructure as Code (Terraform)
-Hardware provision is declarative, managed via **Terraform** (`infrastructure/terraform/main.tf`).
-- **VPC & Security**: Provisions a tight Security Group restricting to essential ports: SSH (22), HTTP (80 - Client), and App Ports (5000/3000).
-- **Compute**: Deploys a free-tier eligible AWS EC2 Instance.
-- **Network**: An AWS Elastic IP is attached to the instance ensuring a stable public IP across reboots or redeployments.
-- **Bootstrap Script (User Data)**: Automatically installs Docker on instance boot, creates a custom `lankan-net` Docker network bridge, and initializes the environment.
+To learn cloud provisioning, I configured the server setup in Terraform:
+* **Networking & Firewalls:** Configured an AWS Security Group exposing ports 22 (SSH), 80/3000/5000 (app endpoints), and 3001/9090 (monitoring metrics).
+* **EC2 Instance:** Allocates a t2.micro instance.
+* **Static IP:** Attaches an AWS Elastic IP to make sure the IP address remains constant across reboots.
+* **Automation:** An AWS User Data bootstrap script installs Docker and initializes folder configurations on first boot.
 
 ### 4. Continuous Deployment (CD)
-If the CI phase passes successfully, GitHub Actions orchestrates the application update directly on AWS EC2 without any downtime:
-- Authorizes with the EC2 instance using an SSH Deploy Key (`appleboy/ssh-action`).
-- Safely halts and removes existing `client` and `server` containers.
-- Pulls the newest lightweight built images from Docker Hub.
-- Leverages Docker run configurations with proper environment variable seeding (e.g., `MONGODB_URI`, `JWT_SECRET`).
-- Evaluates container health for stability and automatically prunes old unused images to save block storage space.
+After tests pass and images are built, the pipeline automatically deploys the code:
+* **SSH Connection:** Accesses the EC2 instance securely using an SSH deploy key.
+* **Secrets Inloading:** Safely writes environment configurations containing MongoDB and Stripe secrets on the host instance.
+* **Container Lifecycle:** Pulls the new container images from Docker Hub, restarts the services, and prunes unused images to keep the server storage clean.
 
-### 5. Frontend Deployment (Vercel)
-For the best performance and developer experience, the React frontend can be deployed directly on **Vercel**:
-- **Automatic Builds**: Vercel detects the `client/` directory and `vite` framework automatically via the root `vercel.json`.
-- **Environment Variables**: Configure `VITE_API_URL` and `VITE_API_BASE_URL` in the Vercel dashboard to point to your backend (e.g., your AWS EC2 IP).
-- **Global Edge Network**: Ensures the UI is delivered instantly to users worldwide.
+### 5. Frontend Hosting (Vercel)
+To ensure fast load times, I deployed the frontend to Vercel:
+* **Build Integration:** Vercel builds the React client and hosts it statically.
+* **Path Mapping:** Rewrites in `vercel.json` forward client API calls to the AWS EC2 backend.
 
 ---
 
-## 💻 Local Development Setup
+## Local Development Setup
 
-We utilize `docker-compose` to replicate our production architecture locally. 
+To test the multi-service setup on your machine, configure Docker and run the Compose tool.
 
 ### Prerequisites:
-- Docker and Docker Compose installed.
-- Setup a `.env` file in the `./server` folder including your `MONGODB_URI` and `JWT_SECRET`.
+* Docker and Docker Compose installed.
+* Create a `.env` file in the `./server` folder:
+  ```env
+  MONGODB_URI=your_mongodb_connection_string
+  JWT_SECRET=your_jwt_signature_secret
+  ```
 
 ### Getting Started:
-
 1. Clone the repository:
    ```bash
    git clone https://github.com/your-username/lankan-primire.git
    ```
-
-2. Boot the cluster:
+2. Build and boot the stack:
    ```bash
    docker-compose up --build
    ```
-
-This spins up:
-- The backend Node API on `http://localhost:5000`
-- The frontend React UI on `http://localhost:3000`
-- An isolated MongoDB container database locally on port `27017`
-
----
-
-## 🔒 Secrets Management
-To duplicate the automated deployment pipeline on your own GitHub fork, ensure the following Repository Secrets are populated in the GitHub repository's specific settings:
-- `DOCKER_USERNAME`: Your Docker Hub identity.
-- `DOCKER_PASSWORD`: Your Docker Hub Access Token.
-- `SSH_PRIVATE_KEY`: Your SSH key pairing with the deployed EC2 metadata for Github Action handshakes.
-- `EC2_IP`: The public Elastic IP deployed by Terraform.
-- `EC2_USER`: Generally `ubuntu` for AWS EC2 instances.
-- `MONGODB_URI`: Production Atlas cluster connection string.
-- `JWT_SECRET`: Safe encryption key for JWT...
+This launches:
+* Backend Node API at `http://localhost:5000`
+* Frontend React client at `http://localhost:3000`
+* MongoDB container running locally on port `27017`
 
 ---
 
-## 🎫 Booking Flow
+## Secrets Management
+To set up the automated pipeline for a repository fork, configure these Repository Secrets in your GitHub repository settings:
+* `DOCKER_USERNAME`: Your Docker Hub account username.
+* `DOCKER_PASSWORD`: Your Docker Hub token.
+* `SSH_PRIVATE_KEY`: Private SSH Key authorized on the EC2 host.
+* `EC2_IP`: The static Elastic IP of the EC2 instance.
+* `EC2_USER`: Remote username (default is `ubuntu` on EC2).
+* `MONGODB_URI`: Connection string for the cloud database.
+* `JWT_SECRET`: Signing token for user authentication.
 
-The end-to-end user journey from browsing movies to receiving a digital ticket:
+---
+
+## Booking Flow
+
+The diagram below details the steps a user takes from browsing movies to checking in at the cinema:
 
 ```mermaid
 flowchart TD
-    A["🏠 Browse Movies"] --> B["🎬 Select Movie"]
-    B --> C["📅 Choose Showtime"]
-    C --> D["💺 Select Seats"]
+    A["Browse Movies"] --> B["Select Movie"]
+    B --> C["Choose Showtime"]
+    C --> D["Select Seats"]
     D --> E{"Seats Available?"}
-    E -- No --> F["❌ Seat locked by another user"]
+    E -- No --> F["Seat locked by another user"]
     F --> D
-    E -- Yes --> G["🔒 Seats locked via WebSocket"]
+    E -- Yes --> G["Seats locked via WebSocket"]
     G --> H{"Split Payment?"}
-    H -- Yes --> I["👥 Invite friends to split"]
-    I --> J["⏳ Wait for all payments (15 min)"]
+    H -- Yes --> I["Invite friends to split"]
+    I --> J["Wait for all payments (15 min)"]
     J --> K{"All Paid?"}
-    K -- No --> L["❌ Booking expired"]
-    K -- Yes --> M["✅ Booking Confirmed"]
-    H -- No --> N["💳 Pay via Stripe"]
+    K -- No --> L["Booking expired"]
+    K -- Yes --> M["Booking Confirmed"]
+    H -- No --> N["Pay via Stripe"]
     N --> O{"Payment Success?"}
-    O -- No --> P["❌ Payment Failed"]
+    O -- No --> P["Payment Failed"]
     O -- Yes --> M
-    M --> Q["📱 QR Code Generated"]
-    Q --> R["📧 WhatsApp Notification"]
-    R --> S["🎟️ Show QR at Cinema"]
+    M --> Q["QR Code Generated"]
+    Q --> R["WhatsApp Notification"]
+    R --> S["Show QR at Cinema"]
 
     style A fill:#1a1a2e,stroke:#e94560,color:#fff
     style M fill:#0f3460,stroke:#00b894,color:#fff
@@ -417,7 +427,7 @@ flowchart TD
 
 ---
 
-## 📊 Database Schema
+## Database Schema
 
 ```mermaid
 erDiagram

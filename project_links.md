@@ -1,23 +1,21 @@
-# Lankan Premiere - Production Links 🎬
+# Lankan Premiere - Deployment Reference
 
-Here are the official links to access all parts of your deployed infrastructure.
+This document provides reference links and details for the deployed production environment.
 
-## 🎥 1. Frontend (Live Website)
-This is the URL your users will visit to book movies.
-* **Live App:** [https://lankan-premire.vercel.app/](https://lankan-premire.vercel.app/)
+## 1. Frontend Client
+* **Application URL:** [https://lankan-premire.vercel.app/](https://lankan-premire.vercel.app/)
+* **Platform:** Vercel Global CDN (rewriting paths configured to route API calls securely)
 
-## ⚙️ 2. Backend API (AWS EC2)
-This is your server handling databases, payments, and WebSockets.
-* **Base URL:** `http://3.7.182.47:5000`
-* **Health Check API:** [http://3.7.182.47:5000/api/health](http://3.7.182.47:5000/api/health)
-*(If the health check returns `{"status":"ok"}`, the server is running perfectly!)*
+## 2. Backend Application API
+* **Base Endpoint:** `http://3.7.182.47:5000`
+* **Health Check Endpoint:** [http://3.7.182.47:5000/api/health](http://3.7.182.47:5000/api/health)
+* **Status Details:** Standard HTTP API health check. A `200 OK` response with `{"status":"ok"}` confirms that both the service and database connection are active.
 
-## 📊 3. Monitoring & Analytics
-Your AWS infrastructure health and performance dashboards.
+## 3. Monitoring and Telemetry Stack
 * **Grafana Dashboard:** [http://3.7.182.47:3001](http://3.7.182.47:3001)
-  * *Default Login:* `admin` / `admin`
-* **Prometheus Metrics:** [http://3.7.182.47:9090](http://3.7.182.47:9090)
+  * *Standard Credentials:* `admin` / `admin`
+* **Prometheus Metrics Page:** [http://3.7.182.47:9090](http://3.7.182.47:9090)
 
-## 🗄️ 4. Cloud Database
-Your centralized cloud database where all movies and bookings are permanently stored.
-* **MongoDB Atlas:** [https://cloud.mongodb.com/](https://cloud.mongodb.com/)
+## 4. Managed Database
+* **Database Instance:** MongoDB Atlas Managed Cluster
+* **Access URL:** [https://cloud.mongodb.com/](https://cloud.mongodb.com/)

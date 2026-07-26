@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lankan-primire-frontend
+  namespace: lankan-primire
+  labels:
+    app: lankan-primire-frontend
+    tier: ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lankan-primire-frontend
+  template:
+    metadata:
+      labels:
+        app: lankan-primire-frontend
+        tier: ui
+    spec:
+      containers:
+      - name: frontend
+        image: lankan-primire-client:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lankan-primire-frontend-service
+  namespace: lankan-primire
+  labels:
+    app: lankan-primire-frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: lankan-primire-frontend
