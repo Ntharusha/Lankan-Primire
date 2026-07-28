@@ -67,7 +67,9 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000',
-  /\.vercel\.app$/ // Allow all vercel subdomains
+  'http://3.7.182.47:3000',  // EC2 frontend
+  'http://3.7.182.47:5000',  // EC2 backend direct
+  /\.vercel\.app$/           // All Vercel deployments
 ].filter(Boolean);
 
 app.use(cors({
