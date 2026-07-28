@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) return res.status(500).json({ message: 'Token generation failed' });
                 res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, loyaltyPoints: user.loyaltyPoints } });
             }
         );
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) return res.status(500).json({ message: 'Token generation failed' });
                 res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, loyaltyPoints: user.loyaltyPoints } });
             }
         );
