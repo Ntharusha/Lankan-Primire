@@ -10,6 +10,10 @@
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Current Server (Auto-detected Relative Path)"
+    },
+    {
       "url": "http://localhost:5000",
       "description": "Local Development Server"
     },
