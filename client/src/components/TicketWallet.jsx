@@ -41,6 +41,30 @@ const TicketWallet = ({ booking, onClose }) => {
         }
     }, [booking, hasCanteenOrder]);
 
+    const handleDownloadBundle = () => {
+        const bundleData = {
+            bookingId: booking._id,
+            movie: booking.show?.movie?.title || 'Cinematic Event',
+            showDate: new Date(booking.show?.showDateTime).toLocaleDateString(),
+            showTime: new Date(booking.show?.showDateTime).toLocaleTimeString(),
+            theater: booking.show?.theater || 'Main Cinema',
+            bookedSeats: booking.bookedSeats,
+            amountPaid: `Rs. ${booking.amount}`,
+            userEmail: booking.user?.email || 'N/A',
+            userPhone: booking.user?.phone || 'N/A',
+            status: booking.status || 'confirmed',
+            issuedAt: new Date().toISOString()
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundleData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `booking-bundle-${booking._id}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    };
+
     if (!booking) return null;
 
     return (
@@ -204,10 +228,26 @@ const TicketWallet = ({ booking, onClose }) => {
                 </AnimatePresence>
 
                 <div className="p-8 pt-0 flex gap-4">
-                    <button className="flex-1 btn-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                    <button 
+                        onClick={handleDownloadBundle}
+                        className="flex-1 btn-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform active:scale-95"
+                    >
                         <Download className="w-4 h-4" /> Export Bundle
                     </button>
-                    <button className="w-16 glass-card py-4 rounded-2xl flex items-center justify-center hover:text-primary transition-colors border-none">
+                    <button 
+                        onClick={() => {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: `${booking.show?.movie?.title} Ticket Pass`,
+                                    text: `Check out my ticket for ${booking.show?.movie?.title}! Seats: ${booking.bookedSeats.join(', ')}`,
+                                    url: window.location.href,
+                                }).catch(() => {});
+                            } else {
+                                alert(`Booking ID ${booking._id} details copied!`);
+                            }
+                        }}
+                        className="w-16 glass-card py-4 rounded-2xl flex items-center justify-center hover:text-primary transition-colors border-none"
+                    >
                         <Share2 className="w-5 h-5" />
                     </button>
                 </div>
