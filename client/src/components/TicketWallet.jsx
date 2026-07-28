@@ -112,14 +112,14 @@ const TicketWallet = ({ booking, onClose }) => {
                                             <Calendar className="w-5 h-5 text-primary" />
                                             <div>
                                                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Date</p>
-                                                <p className="text-sm font-black uppercase text-white">{new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                                <p className="text-sm font-black uppercase text-white">{new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || '1970-01-01T00:00:00.000Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <Clock className="w-5 h-5 text-primary" />
                                             <div>
                                                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Time</p>
-                                                <p className="text-sm font-black uppercase text-white">{new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                                                <p className="text-sm font-black uppercase text-white">{new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || '1970-01-01T00:00:00.000Z').toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                                             </div>
                                         </div>
                                     </div>
