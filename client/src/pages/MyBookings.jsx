@@ -168,7 +168,7 @@ const MyBookings = () => {
                                                             <Calendar className="w-3 h-3" /> Showtime Date
                                                         </p>
                                                         <p className="text-lg font-black uppercase text-white tracking-tight italic">
-                                                            {new Date(booking.show.showDateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            {new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                         </p>
                                                     </div>
                                                     <div className="space-y-2 relative">
@@ -176,7 +176,7 @@ const MyBookings = () => {
                                                             <Clock className="w-3 h-3" /> Premiere Time
                                                         </p>
                                                         <p className="text-lg font-black uppercase text-white tracking-tight italic">
-                                                            {new Date(booking.show.showDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                                         </p>
                                                     </div>
                                                     <div className="space-y-2 relative">
@@ -184,7 +184,7 @@ const MyBookings = () => {
                                                             <MapPin className="w-3 h-3" /> Theater Location
                                                         </p>
                                                         <p className="text-lg font-black uppercase text-white tracking-tight italic truncate">
-                                                            {booking.show?.theater || 'Main Screen'}
+                                                            {typeof booking.show?.theater === 'string' ? booking.show.theater : booking.show?.theater?.name || 'Main Screen'}
                                                         </p>
                                                     </div>
                                                     <div className="space-y-2 relative">
@@ -249,7 +249,7 @@ const MyBookings = () => {
                                         <div className="flex-1">
                                             <h3 className="font-black text-white uppercase tracking-tight text-lg mb-1 truncate">{booking.show?.movie?.title || 'Unknown Movie'}</h3>
                                             <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mb-4">
-                                                Watched on {new Date(booking.show.showDateTime).toLocaleDateString()}
+                                                Watched on {new Date(booking.show?.dateTime || booking.show?.showDateTime || booking.createdAt || Date.now()).toLocaleDateString()}
                                             </p>
                                             <button
                                                 onClick={() => removeBooking(booking._id)}

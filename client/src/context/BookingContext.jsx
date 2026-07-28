@@ -107,14 +107,28 @@ export const BookingProvider = ({ children }) => {
     toast.success('Booking removed successfully')
   }
 
+  const getShowDate = (show, createdAt) => {
+    const rawDate = show?.dateTime || show?.showDateTime || show?.date || createdAt
+    const parsed = rawDate ? new Date(rawDate) : new Date()
+    return isNaN(parsed.getTime()) ? new Date() : parsed
+  }
+
   const getUpcomingBookings = () => {
-    const now = new Date()
-    return bookings.filter(b => b.isPaid && new Date(b.show?.showDateTime) >= now)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    return bookings.filter(b => {
+      const showDate = getShowDate(b.show, b.createdAt)
+      const isConfirmed = b.status !== 'cancelled'
+      return isConfirmed && showDate >= yesterday
+    })
   }
   
   const getPastBookings = () => {
-    const now = new Date()
-    return bookings.filter(b => !b.isPaid || new Date(b.show?.showDateTime) < now)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    return bookings.filter(b => {
+      const showDate = getShowDate(b.show, b.createdAt)
+      const isConfirmed = b.status !== 'cancelled'
+      return !isConfirmed || showDate < yesterday
+    })
   }
 
   return (
