@@ -268,13 +268,60 @@
         {
           "datasource": "Prometheus",
           "editorMode": "code",
-          "expr": "nodejs_memory_usage_bytes{project_name=\"lankan-premiere\"}",
-          "legendFormat": "{{type}}",
+          "expr": "container_memory_usage_bytes{name=~\".*server.*|.*app.*\"} or process_resident_memory_bytes or node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "Memory Usage (Bytes)",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Node.js Memory Usage",
+      "title": "Server & Container Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "%",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 2
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "editorMode": "code",
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU Usage %",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "System CPU Usage (%)",
       "type": "timeseries"
     }
   ],
