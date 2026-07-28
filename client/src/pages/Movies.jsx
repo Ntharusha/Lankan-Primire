@@ -216,36 +216,6 @@ const Movies = () => {
           </div>
         )}
 
-        {/* Coming Soon Section */}
-        <div className="mt-16">
-          <div className="border-l-4 border-yellow-500 pl-4 mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wider">
-              Coming <span className="text-yellow-500">Soon</span>
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div
-                key={item}
-                className="bg-[#121418] rounded-xl p-3 hover:bg-[#1a1d24] transition-colors cursor-pointer text-center group border border-white/5 hover:border-yellow-500/30"
-              >
-                <div className="aspect-[2/3] bg-[#1a1d24] rounded-lg mb-3 overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-yellow-600/20 to-gray-800 flex items-center justify-center">
-                    <span className="text-2xl">🎬</span>
-                  </div>
-                </div>
-                <h4 className="text-white font-semibold text-xs mb-1 group-hover:text-yellow-500 transition-colors truncate">
-                  Coming Soon {item}
-                </h4>
-                <p className="text-gray-500 text-[10px]">2026</p>
-                <span className="inline-block mt-2 bg-yellow-500/20 text-yellow-500 text-[9px] px-2 py-1 rounded-full">
-                  Coming Soon
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Footer Message */}
         <div className="mt-16 text-center">
